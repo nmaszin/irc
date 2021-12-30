@@ -2,19 +2,19 @@
 #include <memory>
 #include <thread>
 #include <list>
-#include <nirc/Server.hpp>
+#include <nirc/IrcServer.hpp>
 #include <nirc/network/TcpServer.hpp>
 #include <nirc/network/TcpSocket.hpp>
 #include <nirc/network/TcpException.hpp>
 #include <nirc/network/bsd/BsdTcpServer.hpp>
 
 namespace nirc {
-	Server::Server(const nirc::cli::Options& options) :
+	IrcServer::IrcServer(const nirc::cli::Options& options) :
 		options(options)
 	{
 	}
 
-	void Server::run() {
+	void IrcServer::run() {
 		nirc::network::TcpServerConfig config(options.getPortNumber());
 		std::unique_ptr<nirc::network::TcpServer> s(new nirc::network::bsd::BsdTcpServer());
 	
@@ -28,7 +28,7 @@ namespace nirc {
 		}
 	}
 
-	void Server::handleClient(std::unique_ptr<nirc::network::TcpSocket>&& client) {
+	void IrcServer::handleClient(std::unique_ptr<nirc::network::TcpSocket>&& client) {
 		try {
 			while (true) {
 				client->send("Hello ;)\n");

@@ -6,9 +6,9 @@
 #include <nirc/network/TcpSocket.hpp>
 
 namespace nirc {
-	class Server {
+	class IrcServer {
 	public:
-		Server(const nirc::cli::Options& options);
+		IrcServer(const nirc::cli::Options& options);
 		void run();
 
 	protected:

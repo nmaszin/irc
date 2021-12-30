@@ -4,8 +4,8 @@ project(nirc)
 add_executable(nirc
 	src/main.cpp
 
-	include/nirc/Server.hpp
-	src/nirc/Server.cpp
+	include/nirc/IrcServer.hpp
+	src/nirc/IrcServer.cpp
 
 	include/nirc/cli/Options.hpp
 	include/nirc/cli/InvalidOptionsException.hpp

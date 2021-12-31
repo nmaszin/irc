@@ -30,8 +30,11 @@ namespace nirc {
 
 	void IrcServer::handleClient(std::unique_ptr<nirc::network::TcpSocket>&& client) {
 		try {
+			client->send("Hello ;)\n");
 			while (true) {
-				client->send("Hello ;)\n");
+				client->send("What's your name?\n");
+				auto response = client->receiveUntil("\n");
+				client->send("Hello, " + response + "!\n");
 			}
 		} catch (const nirc::network::TcpException& e) {
 			// Do nothing, only close the connection

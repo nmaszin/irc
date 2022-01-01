@@ -7,6 +7,7 @@
 #include <nirc/network/TcpSocket.hpp>
 #include <nirc/network/TcpException.hpp>
 #include <nirc/network/bsd/BsdTcpServer.hpp>
+#include <nirc/irc/IrcMessage.hpp>
 
 namespace nirc {
 	IrcServer::IrcServer(const nirc::cli::Options& options) :
@@ -32,9 +33,22 @@ namespace nirc {
 		try {
 			client->send("Hello ;)\n");
 			while (true) {
-				client->send("What's your name?\n");
+				client->send("> ");
 				auto response = client->receiveUntil("\n");
-				client->send("Hello, " + response + "!\n");
+				irc::IrcMessage msg(std::move(response));
+
+				const auto& prefix = msg.getPrefix();
+				if (prefix) {
+					client->send(std::string("[PREFIX] ") + *prefix + "\n");
+				}
+
+				const auto& command = msg.getCommand();
+				client->send(std::string("[COMMAND] ") + command + "\n");
+
+				const auto& arguments = msg.getArguments();
+				for (const auto& e : arguments) {
+					client->send(std::string("[ARGUMENT] ") +  e + "\n");
+				}
 			}
 		} catch (const nirc::network::TcpException& e) {
 			// Do nothing, only close the connection

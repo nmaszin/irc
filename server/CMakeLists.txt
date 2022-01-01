@@ -21,6 +21,12 @@ add_executable(nirc
 	include/nirc/network/bsd/BsdTcpSocket.hpp
 	src/nirc/network/bsd/BsdTcpServer.cpp
 	src/nirc/network/bsd/BsdTcpSocket.cpp
+
+	include/nirc/irc/IrcMessage.hpp
+	include/nirc/irc/IrcMessageException.hpp
+	src/nirc/irc/IrcMessage.cpp
+
+	include/nirc/utils.hpp
 )
 
 set_property(TARGET nirc PROPERTY CXX_STANDARD 17)

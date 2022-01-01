@@ -11,14 +11,17 @@ add_executable(nirc
 	include/nirc/cli/InvalidOptionsException.hpp
 	src/nirc/cli/Options.cpp
 
+	include/nirc/network/AddressInfo.hpp
 	include/nirc/network/TcpServer.hpp
 	include/nirc/network/TcpSocket.hpp
 	include/nirc/network/TcpServerConfig.hpp
 	include/nirc/network/TcpException.hpp
 	src/nirc/network/TcpServerConfig.cpp
 
+	include/nirc/network/bsd/BsdAddressInfo.hpp
 	include/nirc/network/bsd/BsdTcpServer.hpp
 	include/nirc/network/bsd/BsdTcpSocket.hpp
+	src/nirc/network/bsd/BsdAddressInfo.cpp
 	src/nirc/network/bsd/BsdTcpServer.cpp
 	src/nirc/network/bsd/BsdTcpSocket.cpp
 

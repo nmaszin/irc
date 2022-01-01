@@ -25,5 +25,9 @@ namespace nirc::cli {
 	int Options::getPortNumber() const {
 		return this->portNumber;
 	}
+
+	const std::string& Options::getHostname() const {
+		return this->hostname;
+	}
 }
 

@@ -25,15 +25,25 @@ namespace nirc {
 		std::list<std::thread> threads;
 		while (true) {
 			auto client = s->accept();
-			threads.push_back(std::thread(handleClient, std::move(client)));
+			threads.push_back(std::thread(handleClient, std::move(client), options));
 		}
 	}
 
-	void IrcServer::handleClient(std::unique_ptr<nirc::network::TcpSocket>&& client) {
+	void IrcServer::handleClient(
+		std::unique_ptr<nirc::network::TcpSocket>&& client,
+		const cli::Options& options) 
+	{
 		try {
-			client->send("Hello ;)\n");
+			std::cout << "Mamy nowego klienta ;) " << client->getInfo().getHostname() << "\n";
+
+			irc::IrcMessage msg(
+				options.getHostname(),
+				"NOTICE",
+				{"Auth", "No siemanko byku :D"}
+			);
+
+			client->send(msg.toString());
 			while (true) {
-				client->send("> ");
 				auto response = client->receiveUntil("\n");
 				irc::IrcMessage msg(std::move(response));
 

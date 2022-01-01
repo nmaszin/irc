@@ -7,8 +7,10 @@ namespace nirc::cli {
 	public:
 		Options(int argc, char *argv[]);
 		int getPortNumber() const;
+		const std::string& getHostname() const;
 
 	private:
+		std::string hostname = "irc.komputeryk.pl";
 		int portNumber;
 	};
 }

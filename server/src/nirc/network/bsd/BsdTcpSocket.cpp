@@ -3,16 +3,22 @@
 #include <unistd.h>
 #include <nirc/network/TcpException.hpp>
 #include <nirc/network/bsd/BsdTcpSocket.hpp>
+#include <nirc/network/bsd/BsdAddressInfo.hpp>
 
 namespace nirc::network::bsd {
-    BsdTcpSocket::BsdTcpSocket(int socket_descriptor) :
+    BsdTcpSocket::BsdTcpSocket(int socket_descriptor, BsdAddressInfo&& info) :
         socket_descriptor(socket_descriptor),
+        info(info),
         read_buffer(BUFFER_SIZE, '\0')
     {
     }
 
     BsdTcpSocket::~BsdTcpSocket() {
         this->close();
+    }
+
+    const AddressInfo& BsdTcpSocket::getInfo() {
+        return this->info;
     }
 
     void BsdTcpSocket::close() {

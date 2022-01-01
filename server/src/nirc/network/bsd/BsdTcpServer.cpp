@@ -4,6 +4,7 @@
 #include <nirc/network/TcpException.hpp>
 #include <nirc/network/bsd/BsdTcpServer.hpp>
 #include <nirc/network/bsd/BsdTcpSocket.hpp>
+#include <nirc/network/bsd/BsdAddressInfo.hpp>
 
 namespace nirc::network::bsd {
     BsdTcpServer::~BsdTcpServer() {
@@ -37,13 +38,15 @@ namespace nirc::network::bsd {
     }
 
     std::unique_ptr<TcpSocket> BsdTcpServer::accept() {
-        int client_descriptor = ::accept(this->socket_descriptor, NULL, NULL);
-
+        sockaddr_in addres_info;
+        socklen_t length = sizeof(sockaddr);
+        int client_descriptor = ::accept(this->socket_descriptor, (sockaddr*)&address_info, &length);
         if (client_descriptor < 0) {
             throw TcpException("Could not create socket for a new client");
         }
 
-        return std::make_unique<BsdTcpSocket>(client_descriptor);
+        BsdAddressInfo info(address_info);
+        return std::make_unique<BsdTcpSocket>(client_descriptor, std::move(info));
     }
 
     void BsdTcpServer::close() {

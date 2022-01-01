@@ -12,7 +12,12 @@ namespace nirc {
 		void run();
 
 	protected:
-		static void handleClient(std::unique_ptr<nirc::network::TcpSocket>&& client);
+		std::string hostname = "nirc.komputeryk.pl";
+
+		static void handleClient(
+			std::unique_ptr<nirc::network::TcpSocket>&& client,
+			const cli::Options& options
+		);
 
 		const cli::Options& options;
 	};

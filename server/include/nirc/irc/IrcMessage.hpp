@@ -18,8 +18,9 @@ namespace nirc::irc {
         std::string toString() const;
 
     protected:
-        std::string message;
+        static std::vector<std::string> split_message(const std::string& message);
 
+        std::string message;
         std::optional<std::string> prefix;
         std::string command;
         std::vector<std::string> arguments;

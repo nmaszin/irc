@@ -8,29 +8,21 @@ namespace nirc::irc {
     IrcMessage::IrcMessage(const std::string&& message) :
         message(message)
     {
-        utils::trim(this->message);   
-        auto parts = utils::split_by_whitespace(this->message);
-
-        try {
-            auto& potential_prefix = parts[0];
-            auto current_index = 0;
-            if (potential_prefix[0] == ':') {
-                this->prefix = parts[current_index++];
-            }
-
-            this->command = parts[current_index++];
-            this->arguments = std::vector(parts.begin() + current_index, parts.end());
-        } catch (const std::out_of_range&) {
-            throw IrcMessageException("Invalid message");
+        auto parts = split_message(this->message);
+        for (const auto& part : parts) {
+            std::cout << "-> " << part << "\n";
         }
 
+        auto current_index = 0;
+        if (parts[current_index][0] == ':') {
+            this->prefix = parts[current_index++];
+        }
 
-
-        /*std::regex regex(R"(\s*(.*)\s*)");
-        std::smatch match;
-        if (std::regex_match(message, match, regex)) {
-            std::cerr << match[1] << '\n';
-        }*/
+        this->command = parts[current_index++];
+        this->arguments = std::vector(
+            parts.begin() + current_index,
+            parts.end()
+        );
     }
 
     std::optional<std::string>& IrcMessage::getPrefix() {
@@ -59,5 +51,33 @@ namespace nirc::irc {
 
     std::string IrcMessage::toString() const {
         return this->message;
+    }
+
+    std::vector<std::string> IrcMessage::split_message(const std::string& message) {
+        std::vector<std::string> result;
+
+        std::string msg = message;
+        utils::trim(msg);
+        std::regex whitespaces_regex("\\s+");
+        msg = std::regex_replace(msg, whitespaces_regex, " ");
+
+        std::string delimiter = " :";
+        auto colon_argument_index = msg.find(delimiter);
+        if (colon_argument_index != std::string::npos) {
+            std::string substring(
+                msg.begin(),
+                msg.begin() + colon_argument_index
+            );
+
+            result = utils::split_by_whitespace(substring);
+            result.push_back(std::string(
+                msg.begin() + colon_argument_index + delimiter.size(),
+                msg.end()
+            ));
+        } else {
+            result = utils::split_by_whitespace(msg);
+        }
+
+        return result;
     }
 }

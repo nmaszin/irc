@@ -4,14 +4,14 @@
 #include <optional>
 
 namespace nirc::irc {
-    class IrcMessage {
+    class RawIrcMessage {
     public:
-        IrcMessage(
+        RawIrcMessage(
             std::optional<std::string>&& prefix,
             std::string&& command,
             std::vector<std::string>&& arguments
         );
-        IrcMessage(const std::string&& message);
+        RawIrcMessage(const std::string&& message);
 
         void setPrefix(std::optional<std::string>&& prefix);
         std::optional<std::string>& getPrefix();

@@ -1,11 +1,11 @@
 #include <regex>
 #include <iostream>
-#include <nirc/irc/IrcMessage.hpp>
+#include <nirc/irc/RawIrcMessage.hpp>
 #include <nirc/irc/IrcMessageException.hpp>
 #include <nirc/utils.hpp>
 
 namespace nirc::irc {
-    IrcMessage::IrcMessage(
+    RawIrcMessage::RawIrcMessage(
         std::optional<std::string>&& prefix,
         std::string&& command,
         std::vector<std::string>&& arguments
@@ -17,7 +17,7 @@ namespace nirc::irc {
     }
 
 
-    IrcMessage::IrcMessage(const std::string&& message) {
+    RawIrcMessage::RawIrcMessage(const std::string&& message) {
         auto parts = split_message(message);
 
         auto current_index = 0;
@@ -36,43 +36,43 @@ namespace nirc::irc {
     }
 
 
-    void IrcMessage::setPrefix(std::optional<std::string>&& prefix) {
+    void RawIrcMessage::setPrefix(std::optional<std::string>&& prefix) {
         this->prefix = prefix;
     }
 
-    std::optional<std::string>& IrcMessage::getPrefix() {
+    std::optional<std::string>& RawIrcMessage::getPrefix() {
         return this->prefix;
     }
 
-    const std::optional<std::string>& IrcMessage::getPrefix() const {
+    const std::optional<std::string>& RawIrcMessage::getPrefix() const {
         return this->prefix;
     }
 
-    void IrcMessage::setCommand(std::string&& command) {
+    void RawIrcMessage::setCommand(std::string&& command) {
         this->command = command;
     }
 
-    std::string& IrcMessage::getCommand() {
+    std::string& RawIrcMessage::getCommand() {
         return this->command;
     }
 
-    const std::string& IrcMessage::getCommand() const {
+    const std::string& RawIrcMessage::getCommand() const {
         return this->command;
     }
 
-    void IrcMessage::setArguments(std::vector<std::string>&& arguments) {
+    void RawIrcMessage::setArguments(std::vector<std::string>&& arguments) {
         this->arguments = arguments;
     }
 
-    std::vector<std::string>& IrcMessage::getArguments() {
+    std::vector<std::string>& RawIrcMessage::getArguments() {
         return this->arguments;
     }
 
-    const std::vector<std::string>& IrcMessage::getArguments() const {
+    const std::vector<std::string>& RawIrcMessage::getArguments() const {
         return this->arguments;
     }
 
-    std::string IrcMessage::toString() const {
+    std::string RawIrcMessage::toString() const {
         std::string result;
         if (this->prefix) {
             result += std::string(":") + *this->prefix + " ";
@@ -95,7 +95,7 @@ namespace nirc::irc {
         return result;
     }
 
-    std::vector<std::string> IrcMessage::split_message(const std::string& message) {
+    std::vector<std::string> RawIrcMessage::split_message(const std::string& message) {
         std::vector<std::string> result;
 
         std::string msg = message;

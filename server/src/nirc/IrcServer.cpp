@@ -7,7 +7,7 @@
 #include <nirc/network/TcpSocket.hpp>
 #include <nirc/network/TcpException.hpp>
 #include <nirc/network/bsd/BsdTcpServer.hpp>
-#include <nirc/irc/IrcMessage.hpp>
+#include <nirc/irc/RawIrcMessage.hpp>
 
 namespace nirc {
 	IrcServer::IrcServer(const nirc::cli::Options& options) :
@@ -36,29 +36,15 @@ namespace nirc {
 		try {
 			std::cout << "Mamy nowego klienta ;) " << client->getInfo().getHostname() << "\n";
 
-			irc::IrcMessage msg(
+			irc::RawIrcMessage msg(
 				options.getHostname(),
-				"NOTICE",
-				{"Auth", "No siemanko byku :D"}
+				"001",
+				{"*", "Welcome to nirc server ;)"}
 			);
 
 			client->send(msg.toString());
 			while (true) {
-				auto response = client->receiveUntil("\n");
-				irc::IrcMessage msg(std::move(response));
-
-				const auto& prefix = msg.getPrefix();
-				if (prefix) {
-					client->send(std::string("[PREFIX] ") + *prefix + "\n");
-				}
-
-				const auto& command = msg.getCommand();
-				client->send(std::string("[COMMAND] ") + command + "\n");
-
-				const auto& arguments = msg.getArguments();
-				for (const auto& e : arguments) {
-					client->send(std::string("[ARGUMENT] ") +  e + "\n");
-				}
+				irc::RawIrcMessage msg(client->receiveUntil("\n"));
 			}
 		} catch (const nirc::network::TcpException& e) {
 			// Do nothing, only close the connection

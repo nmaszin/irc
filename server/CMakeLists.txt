@@ -25,9 +25,9 @@ add_executable(nirc
 	src/nirc/network/bsd/BsdTcpServer.cpp
 	src/nirc/network/bsd/BsdTcpSocket.cpp
 
-	include/nirc/irc/IrcMessage.hpp
+	include/nirc/irc/RawIrcMessage.hpp
 	include/nirc/irc/IrcMessageException.hpp
-	src/nirc/irc/IrcMessage.cpp
+	src/nirc/irc/RawIrcMessage.cpp
 
 	include/nirc/utils.hpp
 )

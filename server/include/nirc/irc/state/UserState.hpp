@@ -22,6 +22,14 @@ namespace nirc::irc::state {
             );
         }
 
+        std::string getNickArgument() {
+            if (this->nick) {
+                return *this->nick;
+            } else {
+                return "*";
+            }
+        }
+
         std::optional<std::string> nick;
         std::optional<std::string> username;
         std::optional<std::string> hostname;

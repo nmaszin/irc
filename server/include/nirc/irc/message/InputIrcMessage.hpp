@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace nirc::irc {
+namespace nirc::irc::message {
     class InputIrcMessage {
     public:
         InputIrcMessage(const std::string& message);

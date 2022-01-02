@@ -1,7 +1,7 @@
 #include <iostream>
-#include <nirc/irc/InputIrcMessage.hpp>
+#include <nirc/irc/ClientContext.hpp>
+#include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
-#include <nirc/irc/commands/CommandException.hpp>
 #include <nirc/irc/commands/Join.hpp>
 
 namespace nirc::irc::commands {
@@ -10,9 +10,9 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Join::handle(irc::IrcMessageSender& sender, const InputIrcMessage& message) {
+    void Join::handle(ClientContext& contex, const message::InputIrcMessage& message) {
         if (message.getArguments().size() != 1) {
-            throw CommandException("JOIN command should have only one argument\n");
+            //throw CommandException("JOIN command should have only one argument\n");
         }
 
         const auto& channelName = message.getArguments()[0];

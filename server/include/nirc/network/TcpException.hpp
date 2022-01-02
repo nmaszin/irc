@@ -6,9 +6,6 @@
 namespace nirc::network {
     class TcpException : public std::runtime_error {
     public:
-        TcpException(const std::string& message) : 
-            std::runtime_error(message)
-        {
-        }
+        TcpException(const std::string& message);
     };
 }

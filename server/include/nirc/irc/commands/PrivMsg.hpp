@@ -1,12 +1,13 @@
 #pragma once
 
+#include <nirc/irc/ClientContext.hpp>
 #include <nirc/irc/commands/Command.hpp>
-#include <nirc/irc/InputIrcMessage.hpp>
+#include <nirc/irc/message/InputIrcMessage.hpp>
 
 namespace nirc::irc::commands {
     class PrivMsg : public Command {
     public:
         PrivMsg();
-        virtual void handle(irc::IrcMessageSender& sender, const InputIrcMessage& message) override;
+        virtual void handle(ClientContext& contex, const message::InputIrcMessage& message) override;
     };
 }

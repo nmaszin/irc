@@ -1,10 +1,10 @@
 #include <string>
 #include <vector>
 #include <regex>
-#include <nirc/irc/InputIrcMessage.hpp>
-#include <nirc/utils.hpp>
+#include <nirc/irc/message/InputIrcMessage.hpp>
+#include <nirc/utils/string.hpp>
 
-namespace nirc::irc {
+namespace nirc::irc::message {
     InputIrcMessage::InputIrcMessage(const std::string& message) {
         auto parts = split_message(message);
 

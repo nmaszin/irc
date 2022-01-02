@@ -1,36 +1,31 @@
 #pragma once
 
 #include <string>
-#include <nirc/Serializable.hpp>
+#include <nirc/utils/Serializable.hpp>
 
-namespace nirc::irc {
-    class IrcMessagePrefix : public Serializable {
+namespace nirc::irc::message {
+    class Prefix : public Serializable {
     public:
-        enum class Type {
-            Server,
-            User
-        };
-
+        enum class Type { Server, User };
         Type getType() const;
 
     protected:
-        IrcMessagePrefix(Type type);
-
+        Prefix(Type type);
         Type type;
     };
 
-    class IrcMessageServerPrefix : public IrcMessagePrefix {
+    class ServerPrefix : public Prefix {
     public:
-        IrcMessageServerPrefix(const std::string& hostname);
+        ServerPrefix(const std::string& hostname);
         virtual std::string toString() const override;
 
     protected:
         std::string hostname;
     };
 
-    class IrcMessageUserPrefix : public IrcMessagePrefix {
+    class UserPrefix : public Prefix {
     public:
-        IrcMessageUserPrefix(const std::string& nick,
+        UserPrefix(const std::string& nick,
             const std::string& username, const std::string& hostname);
         virtual std::string toString() const override;
 

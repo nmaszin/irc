@@ -2,13 +2,14 @@
 
 #include <string>
 #include <vector>
-#include <nirc/irc/InputIrcMessage.hpp>
+#include <nirc/irc/ClientContext.hpp>
+#include <nirc/irc/message/InputIrcMessage.hpp>
 
 namespace nirc::irc::commands {
     class Command {
     public:
         const std::string& getName() const;
-        virtual void handle(irc::IrcMessageSender& sender, const InputIrcMessage& message) = 0;
+        virtual void handle(ClientContext& context, const message::InputIrcMessage& message) = 0;
 
     protected:
         Command(std::string&& name);

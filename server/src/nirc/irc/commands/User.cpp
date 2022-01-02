@@ -1,7 +1,7 @@
 #include <iostream>
-#include <nirc/irc/InputIrcMessage.hpp>
+#include <nirc/irc/ClientContext.hpp>
+#include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
-#include <nirc/irc/commands/CommandException.hpp>
 #include <nirc/irc/commands/User.hpp>
 
 namespace nirc::irc::commands {
@@ -10,9 +10,9 @@ namespace nirc::irc::commands {
     {
     }
 
-    void User::handle(irc::IrcMessageSender& sender, const InputIrcMessage& message) {
+    void User::handle(ClientContext& contex, const message::InputIrcMessage& message) {
         if (message.getArguments().size() != 4) {
-            throw CommandException("PRIVMSG command should have exactly four arguments\n");
+            //throw CommandException("PRIVMSG command should have exactly four arguments\n");
         }
 
         const auto& username = message.getArguments()[0];

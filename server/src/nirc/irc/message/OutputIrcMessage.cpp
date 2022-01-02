@@ -1,11 +1,11 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <nirc/irc/OutputIrcMessage.hpp>
+#include <nirc/irc/message/OutputIrcMessage.hpp>
 
-namespace nirc::irc {
+namespace nirc::irc::message {
     OutputIrcMessage::OutputIrcMessage(
-        const IrcMessagePrefix& prefix,
+        const Prefix& prefix,
         std::string&& command,
         std::vector<std::string>&& arguments
     ) :

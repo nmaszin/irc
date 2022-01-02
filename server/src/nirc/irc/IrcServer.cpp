@@ -2,18 +2,18 @@
 #include <memory>
 #include <thread>
 #include <list>
-#include <nirc/IrcServer.hpp>
 #include <nirc/network/TcpServer.hpp>
 #include <nirc/network/TcpSocket.hpp>
 #include <nirc/network/TcpException.hpp>
 #include <nirc/network/bsd/BsdTcpServer.hpp>
-#include <nirc/irc/IrcMessageSender.hpp>
-#include <nirc/irc/InputIrcMessage.hpp>
-#include <nirc/irc/OutputIrcMessage.hpp>
-#include <nirc/irc/commands/all.hpp>
+#include <nirc/irc/IrcServer.hpp>
+#include <nirc/irc/ClientContext.hpp>
+#include <nirc/irc/message/InputIrcMessage.hpp>
+#include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/handler/MessageHandlerException.hpp>
+#include <nirc/irc/commands/all.hpp>
 
-namespace nirc {
+namespace nirc::irc {
 	IrcServer::IrcServer(const nirc::cli::Options& options) :
 		options(options),
 		serverPrefix(options.getHostname()),
@@ -30,31 +30,32 @@ namespace nirc {
 
 		std::list<std::thread> threads;
 		while (true) {
-			auto client = s->accept();
+			ClientContext context(s->accept());
 			threads.push_back(std::thread(
-				[this](std::unique_ptr<nirc::network::TcpSocket>&& client) {
-					this->handleClient(std::move(client));
+				[this](auto&& context) {
+					this->handleClient(std::move(context));
 				},
-				std::move(client)
+				std::move(context)
 			));
 		}
 	}
 
-	void IrcServer::handleClient(std::unique_ptr<nirc::network::TcpSocket>&& client) {
+	void IrcServer::handleClient(ClientContext&& context) {
 		try {
-			irc::IrcMessageUserPrefix clientPrefix("nick", "username", "hostname");
-			irc::IrcMessageSender s(*client, serverPrefix);
-			irc::IrcMessageSender c(*client, clientPrefix);
-
-			s.send("001", {"*", "Welcome to nirc server ;)"});
-			c.send("PRIVMSG", {"#kanal", "Siema :D"});
-
 			while (true) {
-				irc::InputIrcMessage msg(client->receiveUntil("\n"));
-				messageHandler.handle(s, msg);
+				this->handleMessage(context);
 			}
 		} catch (const nirc::network::TcpException& e) {
 			// Do nothing, only close the connection
+		}
+	}
+
+	void IrcServer::handleMessage(ClientContext& context) {
+		try {
+			irc::message::InputIrcMessage msg(context.getSocket().receiveUntil("\n"));
+			messageHandler.handle(context, msg);
+		} catch (const handler::MessageHandlerException&) {
+			std::cerr << "Invalid command\n";
 		}
 	}
 }

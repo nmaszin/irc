@@ -4,9 +4,6 @@ project(nirc)
 add_executable(nirc
 	src/main.cpp
 
-	include/nirc/IrcServer.hpp
-	src/nirc/IrcServer.cpp
-
 	include/nirc/cli/Options.hpp
 	include/nirc/cli/InvalidOptionsException.hpp
 	src/nirc/cli/Options.cpp
@@ -18,6 +15,7 @@ add_executable(nirc
 	include/nirc/network/TcpServerConfig.hpp
 	include/nirc/network/TcpException.hpp
 	src/nirc/network/TcpServerConfig.cpp
+	src/nirc/network/TcpException.cpp
 
 	include/nirc/network/bsd/BsdAddressInfo.hpp
 	include/nirc/network/bsd/BsdTcpServer.hpp
@@ -26,19 +24,20 @@ add_executable(nirc
 	src/nirc/network/bsd/BsdTcpServer.cpp
 	src/nirc/network/bsd/BsdTcpSocket.cpp
 
-	include/nirc/irc/InputIrcMessage.hpp
-	include/nirc/irc/OutputIrcMessage.hpp
-	include/nirc/irc/IrcMessagePrefix.hpp
-	include/nirc/irc/IrcMessageException.hpp
-	include/nirc/irc/IrcMessageSender.hpp
-	src/nirc/irc/InputIrcMessage.cpp
-	src/nirc/irc/OutputIrcMessage.cpp
-	src/nirc/irc/IrcMessagePrefix.cpp
-	src/nirc/irc/IrcMessageSender.cpp
+	include/nirc/irc/IrcServer.hpp
+	include/nirc/irc/ClientContext.hpp
+	src/nirc/irc/IrcServer.cpp
+	src/nirc/irc/ClientContext.cpp
+
+	include/nirc/irc/message/InputIrcMessage.hpp
+	include/nirc/irc/message/OutputIrcMessage.hpp
+	include/nirc/irc/message/Prefix.hpp
+	src/nirc/irc/message/InputIrcMessage.cpp
+	src/nirc/irc/message/OutputIrcMessage.cpp
+	src/nirc/irc/message/Prefix.cpp
 
 	include/nirc/irc/commands/all.hpp
 	include/nirc/irc/commands/Command.hpp
-	include/nirc/irc/commands/CommandException.hpp
 	include/nirc/irc/commands/Join.hpp
 	include/nirc/irc/commands/Nick.hpp
 	include/nirc/irc/commands/PrivMsg.hpp
@@ -53,7 +52,9 @@ add_executable(nirc
 	include/nirc/irc/handler/MessageHandlerException.hpp
 	src/nirc/irc/handler/InputMessageHandler.cpp
 
-	include/nirc/utils.hpp
+	include/nirc/utils/string.hpp
+	include/nirc/utils/Serializable.hpp
+	src/nirc/utils/string.cpp
 )
 
 set_property(TARGET nirc PROPERTY CXX_STANDARD 17)

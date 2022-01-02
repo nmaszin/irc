@@ -1,7 +1,7 @@
 #include <iostream>
-#include <nirc/irc/InputIrcMessage.hpp>
+#include <nirc/irc/ClientContext.hpp>
+#include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
-#include <nirc/irc/commands/CommandException.hpp>
 #include <nirc/irc/commands/PrivMsg.hpp>
 
 namespace nirc::irc::commands {
@@ -10,9 +10,9 @@ namespace nirc::irc::commands {
     {
     }
 
-    void PrivMsg::handle(irc::IrcMessageSender& sender, const InputIrcMessage& message) {
+    void PrivMsg::handle(ClientContext& contex, const message::InputIrcMessage& message) {
         if (message.getArguments().size() != 2) {
-            throw CommandException("PRIVMSG command should have exactly two arguments\n");
+            //throw CommandException("PRIVMSG command should have exactly two arguments\n");
         }
 
         const auto& channelName = message.getArguments()[0];

@@ -3,13 +3,13 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <nirc/irc/IrcMessagePrefix.hpp>
+#include <nirc/irc/message/Prefix.hpp>
 
-namespace nirc::irc {
+namespace nirc::irc::message {
     class OutputIrcMessage {
     public:
         OutputIrcMessage(
-            const IrcMessagePrefix& prefix,
+            const Prefix& prefix,
             std::string&& command,
             std::vector<std::string>&& arguments
         );
@@ -17,7 +17,7 @@ namespace nirc::irc {
         std::string toString() const;
 
     protected:
-        const IrcMessagePrefix& prefix;
+        const Prefix& prefix;
         std::string command;
         std::vector<std::string> arguments;
     };

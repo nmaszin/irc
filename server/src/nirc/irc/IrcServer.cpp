@@ -16,21 +16,26 @@
 namespace nirc::irc {
 	IrcServer::IrcServer(const nirc::cli::Options& options) :
 		options(options),
-		serverPrefix(options.getHostname()),
+		serverState(options),
 		messageHandler(irc::commands::all())
 	{
 	}
 
 	void IrcServer::run() {
 		nirc::network::TcpServerConfig config(options.getPortNumber());
-		std::unique_ptr<nirc::network::TcpServer> s(new nirc::network::bsd::BsdTcpServer());
+		std::unique_ptr<nirc::network::TcpServer> server(new nirc::network::bsd::BsdTcpServer());
 	
-		s->run(config);
+		server->run(config);
 		std::cout << "Running server at port " << options.getPortNumber() << '\n';
 
 		std::list<std::thread> threads;
 		while (true) {
-			ClientContext context(s->accept());
+			auto clientSocket = server->accept();
+			ClientContext context(
+				this->serverState,
+				std::move(clientSocket)
+			);
+
 			threads.push_back(std::thread(
 				[this](auto&& context) {
 					this->handleClient(std::move(context));

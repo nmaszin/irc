@@ -1,6 +1,7 @@
 #include <iostream>
 #include <nirc/irc/ClientContext.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
+#include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
 #include <nirc/irc/commands/Nick.hpp>
 
@@ -10,12 +11,20 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Nick::handle(ClientContext& contex, const message::InputIrcMessage& message) {
-        if (message.getArguments().size() != 1) {
-            //throw CommandException("NICK command should have only one argument\n");
+    void Nick::handle(ClientContext& context, const message::InputIrcMessage& message) {
+        auto serverPrefix = context.getServerState().getServerPrefix();
+
+        if (message.getArguments().size() < 1) {
+            context.getSocket().send(message::OutputIrcMessage(
+                *serverPrefix,
+                "431",
+                {"No nickname given"}
+            ).toString());
+            return;
         }
 
-        const auto& nickName = message.getArguments()[0];
-        std::cout << "Komenda NICK: " << nickName << "\n";
+        const auto& nick = message.getArguments()[0];
+        context.getUserState().nick = nick;
+        std::cout << "Ustawiono nick na " << nick << "\n";
     }
 }

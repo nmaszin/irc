@@ -19,8 +19,8 @@ namespace nirc::irc {
 		void handleClient(ClientContext&& context);
 		void handleMessage(ClientContext& context);
 
-		const cli::Options& options;
-		message::ServerPrefix serverPrefix;
+		cli::Options options;
+		state::ServerState serverState;
 		handler::InputMessageHandler messageHandler;
 	};
 }

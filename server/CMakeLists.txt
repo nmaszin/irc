@@ -10,6 +10,7 @@ add_executable(nirc
 	include/nirc/cli/Options.hpp
 	include/nirc/cli/InvalidOptionsException.hpp
 	src/nirc/cli/Options.cpp
+	src/nirc/cli/InvalidOptionsException.cpp
 
 	include/nirc/network/AddressInfo.hpp
 	include/nirc/network/TcpServer.hpp
@@ -25,9 +26,32 @@ add_executable(nirc
 	src/nirc/network/bsd/BsdTcpServer.cpp
 	src/nirc/network/bsd/BsdTcpSocket.cpp
 
-	include/nirc/irc/IrcMessage.hpp
+	include/nirc/irc/InputIrcMessage.hpp
+	include/nirc/irc/OutputIrcMessage.hpp
+	include/nirc/irc/IrcMessagePrefix.hpp
 	include/nirc/irc/IrcMessageException.hpp
-	src/nirc/irc/IrcMessage.cpp
+	include/nirc/irc/IrcMessageSender.hpp
+	src/nirc/irc/InputIrcMessage.cpp
+	src/nirc/irc/OutputIrcMessage.cpp
+	src/nirc/irc/IrcMessagePrefix.cpp
+	src/nirc/irc/IrcMessageSender.cpp
+
+	include/nirc/irc/commands/all.hpp
+	include/nirc/irc/commands/Command.hpp
+	include/nirc/irc/commands/CommandException.hpp
+	include/nirc/irc/commands/Join.hpp
+	include/nirc/irc/commands/Nick.hpp
+	include/nirc/irc/commands/PrivMsg.hpp
+	include/nirc/irc/commands/User.hpp
+	src/nirc/irc/commands/Command.cpp
+	src/nirc/irc/commands/Join.cpp
+	src/nirc/irc/commands/Nick.cpp
+	src/nirc/irc/commands/PrivMsg.cpp
+	src/nirc/irc/commands/User.cpp
+
+	include/nirc/irc/handler/InputMessageHandler.hpp
+	include/nirc/irc/handler/MessageHandlerException.hpp
+	src/nirc/irc/handler/InputMessageHandler.cpp
 
 	include/nirc/utils.hpp
 )
@@ -38,4 +62,3 @@ target_link_libraries(nirc PUBLIC pthread)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Wpedantic -O2 -std=c++20")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wextra -Wpedantic -O2 -std=c++20")
-

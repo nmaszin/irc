@@ -4,6 +4,8 @@
 #include <memory>
 #include <nirc/cli/Options.hpp>
 #include <nirc/network/TcpSocket.hpp>
+#include <nirc/irc/IrcMessagePrefix.hpp>
+#include <nirc/irc/handler/InputMessageHandler.hpp>
 
 namespace nirc {
 	class IrcServer {
@@ -12,14 +14,10 @@ namespace nirc {
 		void run();
 
 	protected:
-		std::string hostname = "nirc.komputeryk.pl";
-
-		static void handleClient(
-			std::unique_ptr<nirc::network::TcpSocket>&& client,
-			const cli::Options& options
-		);
+		void handleClient(std::unique_ptr<nirc::network::TcpSocket>&& client);
 
 		const cli::Options& options;
+		irc::IrcMessageServerPrefix serverPrefix;
+		irc::handler::InputMessageHandler messageHandler;
 	};
 }
-

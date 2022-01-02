@@ -7,11 +7,17 @@
 #include <nirc/network/TcpSocket.hpp>
 #include <nirc/network/TcpException.hpp>
 #include <nirc/network/bsd/BsdTcpServer.hpp>
-#include <nirc/irc/IrcMessage.hpp>
+#include <nirc/irc/IrcMessageSender.hpp>
+#include <nirc/irc/InputIrcMessage.hpp>
+#include <nirc/irc/OutputIrcMessage.hpp>
+#include <nirc/irc/commands/all.hpp>
+#include <nirc/irc/handler/MessageHandlerException.hpp>
 
 namespace nirc {
 	IrcServer::IrcServer(const nirc::cli::Options& options) :
-		options(options)
+		options(options),
+		serverPrefix(options.getHostname()),
+		messageHandler(irc::commands::all())
 	{
 	}
 
@@ -25,40 +31,27 @@ namespace nirc {
 		std::list<std::thread> threads;
 		while (true) {
 			auto client = s->accept();
-			threads.push_back(std::thread(handleClient, std::move(client), options));
+			threads.push_back(std::thread(
+				[this](std::unique_ptr<nirc::network::TcpSocket>&& client) {
+					this->handleClient(std::move(client));
+				},
+				std::move(client)
+			));
 		}
 	}
 
-	void IrcServer::handleClient(
-		std::unique_ptr<nirc::network::TcpSocket>&& client,
-		const cli::Options& options) 
-	{
+	void IrcServer::handleClient(std::unique_ptr<nirc::network::TcpSocket>&& client) {
 		try {
-			std::cout << "Mamy nowego klienta ;) " << client->getInfo().getHostname() << "\n";
+			irc::IrcMessageUserPrefix clientPrefix("nick", "username", "hostname");
+			irc::IrcMessageSender s(*client, serverPrefix);
+			irc::IrcMessageSender c(*client, clientPrefix);
 
-			irc::IrcMessage msg(
-				options.getHostname(),
-				"NOTICE",
-				{"Auth", "No siemanko byku :D"}
-			);
+			s.send("001", {"*", "Welcome to nirc server ;)"});
+			c.send("PRIVMSG", {"#kanal", "Siema :D"});
 
-			client->send(msg.toString());
 			while (true) {
-				auto response = client->receiveUntil("\n");
-				irc::IrcMessage msg(std::move(response));
-
-				const auto& prefix = msg.getPrefix();
-				if (prefix) {
-					client->send(std::string("[PREFIX] ") + *prefix + "\n");
-				}
-
-				const auto& command = msg.getCommand();
-				client->send(std::string("[COMMAND] ") + command + "\n");
-
-				const auto& arguments = msg.getArguments();
-				for (const auto& e : arguments) {
-					client->send(std::string("[ARGUMENT] ") +  e + "\n");
-				}
+				irc::InputIrcMessage msg(client->receiveUntil("\n"));
+				messageHandler.handle(s, msg);
 			}
 		} catch (const nirc::network::TcpException& e) {
 			// Do nothing, only close the connection

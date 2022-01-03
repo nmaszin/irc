@@ -27,6 +27,10 @@ namespace nirc::cli {
 		return this->portNumber;
 	}
 
+	int Options::getMaxClientsNumber() const {
+		return this->maxClientsNumber;
+	}
+
 	const std::string& Options::getHostname() const {
 		return this->hostname;
 	}

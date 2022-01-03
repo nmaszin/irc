@@ -16,10 +16,9 @@ namespace nirc::irc {
 		void run();
 
 	protected:
-		void handleClient(ClientContext&& context);
+		void handleClient(std::unique_ptr<network::TcpSocket>&& socket);
 		void handleMessage(ClientContext& context);
 
-		cli::Options options;
 		state::ServerState serverState;
 		handler::InputMessageHandler messageHandler;
 	};

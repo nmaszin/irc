@@ -72,6 +72,8 @@ namespace nirc::network::bsd {
             int readed_chars = read(this->socket_descriptor, &this->read_buffer[0], BUFFER_SIZE);
             if (readed_chars < 0) {
                 throw TcpException("Could not read from socket");
+            } else if (readed_chars == 0) {
+                throw TcpException("Connection closed by client");
             }
 
             this->read_start_index = 0;

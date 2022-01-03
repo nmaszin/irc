@@ -13,12 +13,16 @@ namespace nirc::irc {
             state::ServerState& serverState,
             std::unique_ptr<nirc::network::TcpSocket>&& socket
         );
+        ClientContext(ClientContext&&) = delete;
+        ~ClientContext();
+
         network::TcpSocket& getSocket();
         state::UserState& getUserState();
         state::ServerState& getServerState();
 
     protected:
-        state::UserState userState;
+        int userDescriptor;
+        state::UserState& userState;
         state::ServerState& serverState;
         std::unique_ptr<nirc::network::TcpSocket> socket;
     };

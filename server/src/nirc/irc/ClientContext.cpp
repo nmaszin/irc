@@ -8,8 +8,14 @@ namespace nirc::irc {
         std::unique_ptr<nirc::network::TcpSocket>&& socket
     ) :
         serverState(serverState),
-        socket(std::move(socket))
+        socket(std::move(socket)),
+        userDescriptor(serverState.allocateUserState()),
+        userState(serverState.getUserState(userDescriptor))
     {
+    }
+
+    ClientContext::~ClientContext() {
+        serverState.freeUserState(this->userDescriptor);
     }
 
     network::TcpSocket& ClientContext::getSocket() {

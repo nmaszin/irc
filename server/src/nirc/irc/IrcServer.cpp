@@ -11,45 +11,66 @@
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/handler/MessageHandlerException.hpp>
+#include <nirc/irc/state/StateException.hpp>
 #include <nirc/irc/commands/all.hpp>
 
 namespace nirc::irc {
 	IrcServer::IrcServer(const nirc::cli::Options& options) :
-		options(options),
 		serverState(options),
 		messageHandler(irc::commands::all())
 	{
 	}
 
 	void IrcServer::run() {
-		nirc::network::TcpServerConfig config(options.getPortNumber());
+		const auto& options = serverState.options;
+		nirc::network::TcpServerConfig config(options.getPortNumber(), options.getMaxClientsNumber());
 		std::unique_ptr<nirc::network::TcpServer> server(new nirc::network::bsd::BsdTcpServer());
 	
 		server->run(config);
 		std::cout << "Running server at port " << options.getPortNumber() << '\n';
 
+		std::thread serverMonitor([this] () {
+			while (true) {
+				std::cout << "Available users:\n";
+				int i = 1;
+				for (const auto& e : this->serverState.users) {
+					if (e) {
+						const auto& user = *e;
+						if (user.nick) {
+							std::cout << i << ". " << *user.nick << "\n";
+						} else {
+							std::cout << i << ". " << "user uninitialized" << "\n";
+						}
+						i++;
+					}
+				}
+
+				using namespace std::chrono;
+				std::this_thread::sleep_for(5s);
+			}
+		});
+
+
 		std::list<std::thread> threads;
 		while (true) {
-			auto clientSocket = server->accept();
-			ClientContext context(
-				this->serverState,
-				std::move(clientSocket)
-			);
-
+			auto socket = server->accept();
 			threads.push_back(std::thread(
-				[this](auto&& context) {
-					this->handleClient(std::move(context));
+				[this](auto&& socket) {
+					this->handleClient(std::move(socket));
 				},
-				std::move(context)
+				std::move(socket)
 			));
 		}
 	}
 
-	void IrcServer::handleClient(ClientContext&& context) {
+	void IrcServer::handleClient(std::unique_ptr<network::TcpSocket>&& socket) {
 		try {
+			ClientContext context(this->serverState, std::move(socket));
 			while (true) {
 				this->handleMessage(context);
 			}
+		} catch (const state::StateException& e) {
+			// Do nothing, only close the connection
 		} catch (const nirc::network::TcpException& e) {
 			// Do nothing, only close the connection
 		}

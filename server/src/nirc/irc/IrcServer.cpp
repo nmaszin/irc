@@ -7,6 +7,7 @@
 #include <nirc/network/TcpException.hpp>
 #include <nirc/network/bsd/BsdTcpServer.hpp>
 #include <nirc/irc/IrcServer.hpp>
+#include <nirc/irc/ServerMonitor.hpp>
 #include <nirc/irc/ClientContext.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
@@ -29,32 +30,13 @@ namespace nirc::irc {
 		server->run(config);
 		std::cout << "Running server at port " << options.getPortNumber() << '\n';
 
-		std::thread serverMonitor([this] () {
-			while (true) {
-				std::cout << "Available users:\n";
-				int i = 1;
-				for (const auto& e : this->serverState.users) {
-					if (e) {
-						const auto& user = *e;
-						if (user.nick) {
-							std::cout << i << ". " << *user.nick << "\n";
-						} else {
-							std::cout << i << ". " << "user uninitialized" << "\n";
-						}
-						i++;
-					}
-				}
+		ServerMonitor monitor(this->serverState);
+		std::thread serverMonitor(monitor);
 
-				using namespace std::chrono;
-				std::this_thread::sleep_for(5s);
-			}
-		});
-
-
-		std::list<std::thread> threads;
+		std::list<std::thread> clientThreads;
 		while (true) {
 			auto socket = server->accept();
-			threads.push_back(std::thread(
+			clientThreads.push_back(std::thread(
 				[this](auto&& socket) {
 					this->handleClient(std::move(socket));
 				},

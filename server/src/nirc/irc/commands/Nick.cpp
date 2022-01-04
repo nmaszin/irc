@@ -14,9 +14,10 @@ namespace nirc::irc::commands {
     void Nick::handle(ClientContext& context, const message::InputIrcMessage& message) {
         auto serverPrefix = context.getServerState().getServerPrefix();
         auto& userState = context.getUserState();
+        auto& socket = context.getSocket();
 
         if (message.getArguments().size() < 1) {
-            context.getSocket().send(message::OutputIrcMessage(
+            socket.send(message::OutputIrcMessage(
                 *serverPrefix,
                 "431",
                 {"No nickname given"}
@@ -24,8 +25,17 @@ namespace nirc::irc::commands {
             return;
         }
 
-        const auto& nick = message.getArguments()[0];
-        userState.setNick(nick);
-        std::cout << "Ustawiono nick na " << nick << "\n";
+        auto nick = message.getArguments()[0];
+
+        try {
+            userState.setNick(nick);
+        } catch (const state::StateException& e) {
+            socket.send(message::OutputIrcMessage(
+                *serverPrefix,
+                "433",
+                {userState.getNickArgument(), nick, "Nickname is already in use"}
+            ).toString());
+            return;
+        }
     }
 }

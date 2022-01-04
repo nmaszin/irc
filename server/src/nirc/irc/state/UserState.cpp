@@ -35,16 +35,19 @@ namespace nirc::irc::state {
         );
     }
 
-    void UserState::setNick(const std::string&) {
+    void UserState::setNick(const std::string& nick) {
         // TODO: add mutex!
+        auto& nicks = this->serverState->nicks;
+        if (nicks.find(nick) != nicks.end()) {
+            throw StateException("Nick already used");
+        }
 
         if (this->nick) {
             // Remove old nick from all nicks set
-            this->serverState->nicks.erase(*this->nick);
+            nicks.erase(*this->nick);
         }
-
         this->nick = nick;
-        this->serverState->nicks.insert(*this->nick);
+        nicks.insert(*this->nick);
     };
 
     const std::string& UserState::getNick() const {

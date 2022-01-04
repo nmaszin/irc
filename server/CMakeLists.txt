@@ -52,12 +52,14 @@ add_executable(nirc
 	include/nirc/irc/commands/PrivMsg.hpp
 	include/nirc/irc/commands/User.hpp
 	include/nirc/irc/commands/IsOn.hpp
+	include/nirc/irc/commands/Quit.hpp
 	src/nirc/irc/commands/Command.cpp
 	src/nirc/irc/commands/Join.cpp
 	src/nirc/irc/commands/Nick.cpp
 	src/nirc/irc/commands/PrivMsg.cpp
 	src/nirc/irc/commands/User.cpp
 	src/nirc/irc/commands/IsOn.cpp
+	src/nirc/irc/commands/Quit.cpp
 
 	include/nirc/irc/handler/InputMessageHandler.hpp
 	include/nirc/irc/handler/MessageHandlerException.hpp

@@ -6,6 +6,20 @@
 #include <nirc/utils/string.hpp>
 
 namespace nirc::utils {
+    std::string join(std::vector<std::string> vec, std::string delimiter) {
+        std::string result;
+        if (vec.size() > 0) {
+            int i = 0;
+            for (; i < vec.size() - 1; i++) {
+                result += vec[i] + delimiter;
+            }
+
+            result += vec[i];
+        }
+
+        return result;
+    }
+
     std::vector<std::string> split_by_whitespace(const std::string& text) {
         std::stringstream ss(text);
         std::istream_iterator<std::string> begin(ss);

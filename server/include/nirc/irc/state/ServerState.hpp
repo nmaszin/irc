@@ -21,6 +21,7 @@ namespace nirc::irc::state {
 
         const cli::Options& getOptions() const;
         std::vector<std::unique_ptr<UserState>>& getUsers();
+        bool isOn(const std::string& nick);
 
     protected:
         friend class UserState;

@@ -5,6 +5,7 @@
 #include <algorithm>
 
 namespace nirc::utils {
+    std::string join(std::vector<std::string> vec, std::string delimiter);
     std::vector<std::string> split_by_whitespace(const std::string& text);
 
     // The following functions come from this url:

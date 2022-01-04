@@ -80,4 +80,9 @@ namespace nirc::irc::state {
     std::vector<std::unique_ptr<UserState>>& ServerState::getUsers() {
         return this->users;
     }
+
+    bool ServerState::isOn(const std::string& nick) {
+        std::lock_guard<std::mutex> guard(this->nicksMutex);
+        return this->nicks.find(nick) != this->nicks.end();
+    }
 }

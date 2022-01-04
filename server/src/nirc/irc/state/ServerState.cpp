@@ -12,7 +12,8 @@
 namespace nirc::irc::state {
     ServerState::ServerState(const cli::Options& options) :
         options(options),
-        users(options.getMaxClientsNumber())
+        users(options.getMaxClientsNumber()),
+        usersMutexes(options.getMaxClientsNumber())
     {}
 
     std::unique_ptr<message::Prefix> ServerState::getServerPrefix() {
@@ -35,11 +36,17 @@ namespace nirc::irc::state {
     }
 
     int ServerState::allocateUserState() {
+        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
+
         for (int i = 0; i < this->users.size(); i++) {
             if (!users[i]) {
-                users[i] = std::make_unique<state::UserState>(this);
-                std::cout << "Allocate user with descriptor " << i << "\n";
-                return i; // descriptor
+                auto descriptor = i;
+                usersMutexes[descriptor] = std::make_unique<std::mutex>();
+                users[descriptor] = std::make_unique<state::UserState>(
+                    this,
+                    *usersMutexes[descriptor]
+                );
+                return descriptor;
             }
         }
 
@@ -47,14 +54,20 @@ namespace nirc::irc::state {
     }
 
     void ServerState::freeUserState(int descriptor) {
-        std::cout << "Free user with descriptor " << descriptor << "\n";
+        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
+
         try {
-            auto& ptr = users.at(descriptor);
-            if (!ptr) {
+            auto& userStatePtr = users.at(descriptor);
+            if (!userStatePtr) {
                 throw std::out_of_range("");
             }
+            userStatePtr = nullptr;
 
-            ptr = nullptr;
+            auto& userMutexPtr = usersMutexes.at(descriptor);
+            if (!userMutexPtr) {
+                throw std::out_of_range("");
+            }
+            userMutexPtr = nullptr;
         } catch (const std::out_of_range&) {
             throw StateException("User with such descriptor does not exist");
         }

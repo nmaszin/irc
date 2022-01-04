@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/StateException.hpp>
@@ -11,7 +12,10 @@ namespace nirc::irc::state {
 
     class UserState {
     public:
-        UserState(ServerState *serverState);
+        UserState(
+            ServerState *serverState,
+            std::mutex& mutex
+        );
         ~UserState();
 
         std::unique_ptr<message::Prefix> getUserPrefix();
@@ -32,8 +36,13 @@ namespace nirc::irc::state {
         void setRealname(const std::string& nick);
         const std::string& getRealname() const;
 
+        ServerState *getServerState();
+        std::mutex& getMutex();
+
     protected:
         ServerState *serverState;
+        std::mutex& mutex;
+
         std::optional<std::string> nick; // Assign only by setNick to preserve data consistency
         std::optional<std::string> username;
         std::optional<std::string> hostname;

@@ -26,8 +26,10 @@ add_executable(nirc
 
 	include/nirc/irc/IrcServer.hpp
 	include/nirc/irc/ClientContext.hpp
+	include/nirc/irc/ServerMonitor.hpp
 	src/nirc/irc/IrcServer.cpp
 	src/nirc/irc/ClientContext.cpp
+	src/nirc/irc/ServerMonitor.cpp
 
 	include/nirc/irc/message/InputIrcMessage.hpp
 	include/nirc/irc/message/OutputIrcMessage.hpp

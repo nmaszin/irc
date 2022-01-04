@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/UserState.hpp>
@@ -26,6 +27,9 @@ namespace nirc::irc::state {
 
         const cli::Options& options;
         std::vector<std::unique_ptr<UserState>> users;
+        std::vector<std::unique_ptr<std::mutex>> usersMutexes;
         std::set<std::string> nicks;
+        std::mutex nicksMutex;
+        std::mutex userAllocationMutex;
     };
 }

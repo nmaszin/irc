@@ -23,7 +23,7 @@ namespace nirc::irc {
 	}
 
 	void IrcServer::run() {
-		const auto& options = serverState.options;
+		const auto& options = serverState.getOptions();;
 		nirc::network::TcpServerConfig config(options.getPortNumber(), options.getMaxClientsNumber());
 		std::unique_ptr<nirc::network::TcpServer> server(new nirc::network::bsd::BsdTcpServer());
 	

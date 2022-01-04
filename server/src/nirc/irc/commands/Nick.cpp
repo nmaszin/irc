@@ -13,6 +13,7 @@ namespace nirc::irc::commands {
 
     void Nick::handle(ClientContext& context, const message::InputIrcMessage& message) {
         auto serverPrefix = context.getServerState().getServerPrefix();
+        auto& userState = context.getUserState();
 
         if (message.getArguments().size() < 1) {
             context.getSocket().send(message::OutputIrcMessage(
@@ -24,7 +25,7 @@ namespace nirc::irc::commands {
         }
 
         const auto& nick = message.getArguments()[0];
-        context.getUserState().nick = nick;
+        userState.setNick(nick);
         std::cout << "Ustawiono nick na " << nick << "\n";
     }
 }

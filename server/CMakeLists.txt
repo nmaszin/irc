@@ -36,6 +36,13 @@ add_executable(nirc
 	src/nirc/irc/message/OutputIrcMessage.cpp
 	src/nirc/irc/message/Prefix.cpp
 
+	include/nirc/irc/state/ServerState.hpp
+	include/nirc/irc/state/UserState.hpp
+	include/nirc/irc/state/StateException.hpp
+	src/nirc/irc/state/ServerState.cpp
+	src/nirc/irc/state/UserState.cpp
+	src/nirc/irc/state/StateException.cpp
+
 	include/nirc/irc/commands/all.hpp
 	include/nirc/irc/commands/Command.hpp
 	include/nirc/irc/commands/Join.hpp

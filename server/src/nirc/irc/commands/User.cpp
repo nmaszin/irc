@@ -23,10 +23,11 @@ namespace nirc::irc::commands {
             ).toString());
             return;
         }
-        
-        userState.username = message.getArguments()[0];
-        userState.hostname = message.getArguments()[1];
-        userState.servername = message.getArguments()[2];
-        userState.realname = message.getArguments()[3];
+
+        const auto& args = message.getArguments();
+        userState.setUsername(args[0]);
+        userState.setHostname(args[1]);
+        userState.setServername(args[2]);
+        userState.setRealname(args[3]);
     }
 }

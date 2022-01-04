@@ -16,14 +16,16 @@ namespace nirc::irc {
             while (true) {
 				std::cout << "Available users:\n";
 				int i = 1;
-				for (const auto& e : this->serverState.users) {
+				for (const auto& e : this->serverState.getUsers()) {
 					if (e) {
 						const auto& user = *e;
-						if (user.nick) {
-							std::cout << i << ". " << *user.nick << "\n";
-						} else {
-							std::cout << i << ". " << "user uninitialized" << "\n";
-						}
+                        try {
+                            const auto& nick = user.getNick();
+                            std::cout << i << ". " << nick << "\n";
+                        } catch (const state::StateException& e) {
+                            std::cout << i << ". " << "user uninitialized" << "\n";
+                        }
+                        
 						i++;
 					}
 				}

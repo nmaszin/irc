@@ -7,30 +7,34 @@
 #include <nirc/irc/state/StateException.hpp>
 
 namespace nirc::irc::state {
-    struct UserState {
-        std::unique_ptr<message::Prefix> getUserPrefix() {
-            if (!this->nick) {
-                throw StateException("NICK not called");
-            } else if (!this->username || !this->hostname) {
-                throw StateException("USER not called");
-            }
+    class ServerState;
 
-            return std::make_unique<message::UserPrefix>(
-                *this->nick,
-                *this->username,
-                *this->hostname
-            );
-        }
+    class UserState {
+    public:
+        UserState(ServerState *serverState);
+        ~UserState();
 
-        std::string getNickArgument() {
-            if (this->nick) {
-                return *this->nick;
-            } else {
-                return "*";
-            }
-        }
+        std::unique_ptr<message::Prefix> getUserPrefix();
 
-        std::optional<std::string> nick;
+        void setNick(const std::string& nick);
+        const std::string& getNick() const;
+        std::string getNickArgument();
+
+        void setUsername(const std::string& nick);
+        const std::string& getUsername() const;
+
+        void setHostname(const std::string& nick);
+        const std::string& getHostname() const;
+
+        void setServername(const std::string& nick);
+        const std::string& getServername() const;
+
+        void setRealname(const std::string& nick);
+        const std::string& getRealname() const;
+
+    protected:
+        ServerState *serverState;
+        std::optional<std::string> nick; // Assign only by setNick to preserve data consistency
         std::optional<std::string> username;
         std::optional<std::string> hostname;
         std::optional<std::string> servername;

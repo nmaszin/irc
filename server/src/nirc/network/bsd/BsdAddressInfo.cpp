@@ -1,6 +1,8 @@
 #include <vector>
+#include <iostream>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <cstring>
 #include <nirc/network/bsd/BsdAddressInfo.hpp>
 #include <nirc/network/TcpException.hpp>
 
@@ -29,7 +31,7 @@ namespace nirc::network::bsd {
     }
 
     std::string BsdAddressInfo::getHostname() const {
-        std::string hostname(NI_MAXHOST, '\0');
+        std::string hostname(NI_MAXHOST + 1, '\0');
         int result = getnameinfo((sockaddr*)&this->address_info, sizeof(this->address_info),
             &hostname[0], hostname.size(), NULL, 0, NI_NAMEREQD);
 
@@ -37,11 +39,7 @@ namespace nirc::network::bsd {
             throw TcpException("Could not obtain hostname");
         }
 
-        /*auto index = hostname.find("\0");
-        if (index != std::string::npos) {
-            hostname.resize(index);
-        }*/
-
+        hostname.resize(std::strlen(&hostname[0]));
         return hostname;
     }
 

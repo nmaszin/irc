@@ -1,6 +1,6 @@
 #include <string>
 #include <vector>
-#include <nirc/irc/ClientContext.hpp>
+#include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/commands/Command.hpp>
 
 namespace nirc::irc::commands {

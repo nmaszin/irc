@@ -1,7 +1,9 @@
 #include <iostream>
 #include <optional>
 #include <string>
-#include <nirc/irc/ClientContext.hpp>
+#include <nirc/cli/Options.hpp>
+#include <nirc/irc/state/UserState.hpp>
+#include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
@@ -14,11 +16,10 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Quit::handle(ClientContext& context, const message::InputIrcMessage& message) {
-        auto& userState = context.getUserState();
-        auto& serverState = context.getServerState();
+    void Quit::handle(state::UserState& userState, const message::InputIrcMessage& message) {
+        auto& socket = userState.getSocket();
+        auto& serverState = userState.getServerState();
         auto serverPrefix = serverState.getServerPrefix();
-        auto& socket = context.getSocket();
 
         std::optional<std::string> quitMessage;
         const auto& arguments = message.getArguments();

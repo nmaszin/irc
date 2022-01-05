@@ -4,7 +4,7 @@
 #include <nirc/irc/commands/Command.hpp>
 #include <nirc/irc/handler/InputMessageHandler.hpp>
 #include <nirc/irc/handler/MessageHandlerException.hpp>
-#include <nirc/irc/ClientContext.hpp>
+#include <nirc/irc/state/UserState.hpp>
 
 namespace nirc::irc::handler {
     InputMessageHandler::InputMessageHandler(std::vector<std::unique_ptr<commands::Command>>&& supportedCommands)
@@ -19,10 +19,10 @@ namespace nirc::irc::handler {
         }
     }
 
-    void InputMessageHandler::handle(ClientContext& context, message::InputIrcMessage& message) {
+    void InputMessageHandler::handle(state::UserState& userState, message::InputIrcMessage& message) {
         try {
             auto& command = this->mapping.at(message.getCommand());
-            command->handle(context, message);
+            command->handle(userState, message);
         } catch (const std::out_of_range&) {
             throw MessageHandlerException("Command does not exist");
         }

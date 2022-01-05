@@ -14,20 +14,20 @@ namespace nirc::irc::state {
     class ServerState {
     public:
         ServerState(const cli::Options& options);
-        std::unique_ptr<message::Prefix> getServerPrefix();
 
-        UserState& getUserState(int descriptor);
-        int allocateUserState();
-        void freeUserState(int descriptor);
+        UserState& addUser(std::unique_ptr<network::TcpSocket>&& socket);
+        UserState& getUserByDescriptor(int descriptor);
+        void freeUser(UserState& state);
+
+        const cli::Options& getOptions() const;
+        std::unique_ptr<message::Prefix> getServerPrefix();
+        std::vector<std::unique_ptr<UserState>>& getUsers();
+        bool isOn(const std::string& nick);
 
         bool doesChannelExists(const std::string& name);
         ChannelState& getChannelState(const std::string& name);
         void initPrivateConversation(const std::string& recipient);
         void initChannel(const std::string& name);
-
-        const cli::Options& getOptions() const;
-        std::vector<std::unique_ptr<UserState>>& getUsers();
-        bool isOn(const std::string& nick);
 
     protected:
         friend class UserState;
@@ -39,5 +39,6 @@ namespace nirc::irc::state {
 
         std::mutex nicksMutex;
         std::mutex userAllocationMutex;
+        std::mutex channelsMutex;
     };
 }

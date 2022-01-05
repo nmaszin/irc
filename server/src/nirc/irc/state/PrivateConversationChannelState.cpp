@@ -9,7 +9,7 @@
 
 namespace nirc::irc::state {
     PrivateConversationChannelState::PrivateConversationChannelState(
-            ServerState *serverState,
+            ServerState& serverState,
             int recipient
         ) :
             ChannelState(

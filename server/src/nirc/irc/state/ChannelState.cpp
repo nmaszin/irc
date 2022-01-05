@@ -24,11 +24,11 @@ namespace nirc::irc::state {
     bool ChannelState::isOn(int userDescriptor) const {
         std::lock_guard<std::mutex> guard(this->mutex);
 
-        auto& userState = this->serverState->getUserState(userDescriptor);
+        auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
         return nicks.find(userState.getNick()) != nicks.end();
     }
 
-    ChannelState::ChannelState(ServerState *serverState, std::vector<int>&& participants) :
+    ChannelState::ChannelState(ServerState& serverState, std::vector<int>&& participants) :
         serverState(serverState)
     {
         for (const auto& participant : participants) {
@@ -37,14 +37,13 @@ namespace nirc::irc::state {
     }
 
     void ChannelState::join(int userDescriptor) {
-        std::lock_guard<std::mutex> guard(this->mutex);
-
         if (this->isOn(userDescriptor)) {
             throw StateException("User has already joined to channel");
         }
 
+        std::lock_guard<std::mutex> guard(this->mutex);
         this->participants.push_back(userDescriptor);
-        const auto& userState = this->serverState->getUserState(userDescriptor);
+        const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
         this->nicks.insert(userState.getNick());
     }
 
@@ -62,7 +61,7 @@ namespace nirc::irc::state {
         }
 
         this->participants.erase(it);
-        const auto& userState = this->serverState->getUserState(userDescriptor);
+        const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
         this->nicks.erase(userState.getNick());
     }
 

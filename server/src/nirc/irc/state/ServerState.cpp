@@ -18,54 +18,56 @@ namespace nirc::irc::state {
         users(options.getMaxClientsNumber())
     {}
 
+    UserState& ServerState::addUser(std::unique_ptr<network::TcpSocket>&& socket) {
+        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
+        for (int descriptor = 0; descriptor < this->users.size(); descriptor++) {
+            if (!users[descriptor]) {
+                this->users[descriptor] = std::make_unique<UserState>(
+                    *this,
+                    std::move(socket),
+                    descriptor
+                );
+                return *this->users[descriptor];
+            }
+        }
+
+        throw StateException("Could not create new user");
+    }
+
+    UserState& ServerState::getUserByDescriptor(int descriptor) {
+        if (!this->users[descriptor]) {
+            throw StateException("User with given descriptor does not exist");
+        }
+
+        return *this->users[descriptor];
+    }
+
+    void ServerState::freeUser(UserState& state) {
+        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
+        this->users[state.descriptor] = nullptr;
+    }
+
+    const cli::Options& ServerState::getOptions() const {
+        return this->options;
+    }
+
     std::unique_ptr<message::Prefix> ServerState::getServerPrefix() {
         return std::make_unique<message::ServerPrefix>(
             this->options.getHostname()
         );
     }
 
-    state::UserState& ServerState::getUserState(int descriptor) {
-        try {
-            auto& ptr = this->users.at(descriptor);
-            if (!ptr) {
-                throw std::out_of_range("");
-            }
-
-            return *ptr;
-        } catch (const std::out_of_range&) {
-            throw new StateException("User with such descriptor does not exist");
-        }
+    std::vector<std::unique_ptr<UserState>>& ServerState::getUsers() {
+        return this->users;
     }
 
-    int ServerState::allocateUserState() {
-        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
-
-        for (int i = 0; i < this->users.size(); i++) {
-            if (!users[i]) {
-                auto descriptor = i;
-                users[descriptor] = std::make_unique<state::UserState>(this);
-                return descriptor;
-            }
-        }
-
-        throw StateException("Too many users");
-    }
-
-    void ServerState::freeUserState(int descriptor) {
-        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
-
-        try {
-            auto& userStatePtr = users.at(descriptor);
-            if (!userStatePtr) {
-                throw std::out_of_range("");
-            }
-            userStatePtr = nullptr;
-        } catch (const std::out_of_range&) {
-            throw StateException("User with such descriptor does not exist");
-        }
+    bool ServerState::isOn(const std::string& nick) {
+        std::lock_guard<std::mutex> guard(this->nicksMutex);
+        return this->nicks.find(nick) != this->nicks.end();
     }
 
     bool ServerState::doesChannelExists(const std::string& name) {
+        std::lock_guard<std::mutex> guard(this->channelsMutex);
         return this->channels.find(name) != this->channels.end();
     }
 
@@ -74,6 +76,7 @@ namespace nirc::irc::state {
             throw StateException("Channel does not exist");
         }
 
+        std::lock_guard<std::mutex> guard(this->channelsMutex);
         return *this->channels[name];
     }
 
@@ -86,9 +89,10 @@ namespace nirc::irc::state {
             throw StateException("Channel has already exist");
         }
 
+        std::lock_guard<std::mutex> guard(this->channelsMutex);
         int descriptor = this->nicks[recipient];
         this->channels[recipient] = std::make_unique<PrivateConversationChannelState>(
-            this,
+            *this,
             descriptor
         );
     }
@@ -98,22 +102,10 @@ namespace nirc::irc::state {
             throw StateException("Channel has already exist");
         }
 
+        std::lock_guard<std::mutex> guard(this->channelsMutex);
         this->channels[name] = std::make_unique<NamedChannelState>(
-            this,
+            *this,
             std::vector<int>()
         );
-    }
-
-    const cli::Options& ServerState::getOptions() const {
-        return this->options;
-    }
-
-    std::vector<std::unique_ptr<UserState>>& ServerState::getUsers() {
-        return this->users;
-    }
-
-    bool ServerState::isOn(const std::string& nick) {
-        std::lock_guard<std::mutex> guard(this->nicksMutex);
-        return this->nicks.find(nick) != this->nicks.end();
     }
 }

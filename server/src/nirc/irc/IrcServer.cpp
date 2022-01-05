@@ -8,7 +8,6 @@
 #include <nirc/network/bsd/BsdTcpServer.hpp>
 #include <nirc/irc/IrcServer.hpp>
 #include <nirc/irc/ServerMonitor.hpp>
-#include <nirc/irc/ClientContext.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/handler/MessageHandlerException.hpp>
@@ -46,22 +45,23 @@ namespace nirc::irc {
 	}
 
 	void IrcServer::handleClient(std::unique_ptr<network::TcpSocket>&& socket) {
+		state::UserState *userState;
 		try {
-			ClientContext context(this->serverState, std::move(socket));
+			userState = &this->serverState.addUser(std::move(socket));
 			while (true) {
-				this->handleMessage(context);
+				this->handleMessage(*userState);
 			}
-		} catch (const state::StateException& e) {
-			// Do nothing, only close the connection
-		} catch (const nirc::network::TcpException& e) {
-			// Do nothing, only close the connection
+		} catch (const std::exception& e) {
+			std::cout << "WYSTĄPIŁ BŁĄD: " << e.what() << "\n";
+			this->serverState.freeUser(*userState);
 		}
 	}
 
-	void IrcServer::handleMessage(ClientContext& context) {
+	void IrcServer::handleMessage(state::UserState& userState) {
+		auto& socket = userState.getSocket();
 		try {
-			irc::message::InputIrcMessage msg(context.getSocket().receiveUntil("\n"));
-			messageHandler.handle(context, msg);
+			irc::message::InputIrcMessage msg(socket.receiveUntil("\n"));
+			messageHandler.handle(userState, msg);
 		} catch (const handler::MessageHandlerException&) {
 			std::cerr << "Invalid command\n";
 		}

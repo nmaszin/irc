@@ -5,7 +5,8 @@
 
 #include <nirc/cli/Options.hpp>
 #include <nirc/network/TcpSocket.hpp>
-#include <nirc/irc/ClientContext.hpp>
+#include <nirc/irc/state/ServerState.hpp>
+#include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/handler/InputMessageHandler.hpp>
 
@@ -17,7 +18,7 @@ namespace nirc::irc {
 
 	protected:
 		void handleClient(std::unique_ptr<network::TcpSocket>&& socket);
-		void handleMessage(ClientContext& context);
+		void handleMessage(state::UserState& userState);
 
 		state::ServerState serverState;
 		handler::InputMessageHandler messageHandler;

@@ -12,7 +12,7 @@ namespace nirc::irc::state {
     class NamedChannelState : public ChannelState {
     public:
         NamedChannelState(
-            ServerState *serverState,
+            ServerState& serverState,
             std::vector<int>&& participants
         );
     };

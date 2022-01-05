@@ -11,7 +11,6 @@
 #include <nirc/irc/commands/Quit.hpp>
 #include <nirc/irc/commands/Part.hpp>
 
-
 namespace nirc::irc::commands {
     std::vector<std::unique_ptr<commands::Command>> all() {
         std::vector<std::unique_ptr<commands::Command>> result;

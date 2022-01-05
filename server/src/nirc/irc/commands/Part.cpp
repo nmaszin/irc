@@ -1,5 +1,6 @@
 #include <iostream>
-#include <nirc/irc/ClientContext.hpp>
+#include <nirc/cli/Options.hpp>
+#include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
@@ -13,11 +14,10 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Part::handle(ClientContext& context, const message::InputIrcMessage& message) {
-        auto& serverState = context.getServerState();
+    void Part::handle(state::UserState& userState, const message::InputIrcMessage& message) {
+        auto& socket = userState.getSocket();
+        auto& serverState = userState.getServerState();
         auto serverPrefix = serverState.getServerPrefix();
-        auto& userState = context.getUserState();
-        auto& socket = context.getSocket();
 
         if (message.getArguments().size() < 1) {
             socket.send(message::OutputIrcMessage(

@@ -1,10 +1,12 @@
 #include <iostream>
-#include <nirc/irc/ClientContext.hpp>
+#include <nirc/cli/Options.hpp>
+#include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
 #include <nirc/irc/commands/PrivMsg.hpp>
 #include <nirc/irc/state/UserState.hpp>
+#include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/state/ChannelState.hpp>
 
 namespace nirc::irc::commands {
@@ -13,11 +15,10 @@ namespace nirc::irc::commands {
     {
     }
 
-    void PrivMsg::handle(ClientContext& context, const message::InputIrcMessage& message) {
-        auto& serverState = context.getServerState();
+    void PrivMsg::handle(state::UserState& userState, const message::InputIrcMessage& message) {
+        auto& socket = userState.getSocket();
+        auto& serverState = userState.getServerState();
         auto serverPrefix = serverState.getServerPrefix();
-        auto& userState = context.getUserState();
-        auto& socket = context.getSocket();
 
         if (message.getArguments().size() < 1) {
             socket.send(message::OutputIrcMessage(
@@ -50,10 +51,11 @@ namespace nirc::irc::commands {
         auto& channelState = serverState.getChannelState(recipient);
         const auto& recipients = channelState.getMessageRecipients(userState.getDescriptor());
         for (const auto& descriptor : recipients) {
-            auto& recipient = serverState.getUserState(descriptor);
-            ClientContext *context = recipient.getContext();
-            auto &socket = context->getSocket();
-            auto& prefix = recipient.getUserPrefix();
+            std::cout << descriptor << " ";
+
+            auto& recipientState = serverState.getUserByDescriptor(descriptor);
+            auto &socket = recipientState.getSocket();
+            auto prefix = recipientState.getUserPrefix();
 
             socket.send(message::OutputIrcMessage(
                 *prefix,
@@ -61,6 +63,7 @@ namespace nirc::irc::commands {
                 {recipient, text}
             ).toString());
         }
+
+        std::cout << "\n";
     }
 }
-

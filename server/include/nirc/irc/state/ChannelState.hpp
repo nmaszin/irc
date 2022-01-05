@@ -17,9 +17,9 @@ namespace nirc::irc::state {
         static bool isChannel(const std::string& identifier);
 
     protected:
-        ChannelState(ServerState *serverState, std::vector<int>&& participants);
+        ChannelState(ServerState& serverState, std::vector<int>&& participants);
 
-        ServerState *serverState;
+        ServerState& serverState;
         std::vector<int> participants;
         std::set<std::string> nicks;
         mutable std::mutex mutex;

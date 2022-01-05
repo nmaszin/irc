@@ -5,6 +5,7 @@
 #include <optional>
 #include <vector>
 #include <nirc/cli/Options.hpp>
+#include <nirc/network/TcpSocket.hpp>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/state/ServerState.hpp>
@@ -12,15 +13,30 @@
 
 
 namespace nirc::irc::state {
-    UserState::UserState(ServerState *serverState) :
-        serverState(serverState)
-    {}
+    UserState::UserState(
+        ServerState& serverState,
+        std::unique_ptr<network::TcpSocket>&& socket,
+        int descriptor
+    ) :
+        serverState(serverState),
+        socket(std::move(socket)),
+        descriptor(descriptor)
+    {
+    }
 
     UserState::~UserState() {
-        std::lock_guard<std::mutex> guard(this->mutex);
+        {
+            std::lock_guard<std::mutex> guard(this->serverState.nicksMutex);
+            if (this->nick) {
+                this->serverState.nicks.erase(*this->nick);
+            }
+        }
+        {
+            for (auto& channel : this->channels) {
+                this->serverState.channels[channel]->leave(this->descriptor);
+            }
 
-        if (this->nick) {
-            this->serverState->nicks.erase(*this->nick);
+            this->serverState.channels.erase(*this->nick);
         }
     }
 
@@ -43,12 +59,12 @@ namespace nirc::irc::state {
     void UserState::setNick(const std::string& nick) {
         std::lock(
             this->mutex,
-            this->serverState->nicksMutex
+            this->serverState.nicksMutex
         );
         std::lock_guard<std::mutex> g1(this->mutex, std::adopt_lock);
-        std::lock_guard<std::mutex> g2(this->serverState->nicksMutex, std::adopt_lock);
+        std::lock_guard<std::mutex> g2(this->serverState.nicksMutex, std::adopt_lock);
 
-        auto& nicks = this->serverState->nicks;        
+        auto& nicks = this->serverState.nicks;        
         if (nicks.find(nick) != nicks.end()) {
             throw StateException("Nick already used");
         }
@@ -67,7 +83,7 @@ namespace nirc::irc::state {
         if (this->nick) {
             return *this->nick;
         } else {
-            throw StateException("Nick has not assigned");
+            throw StateException("Nick has not asgned");
         }
     }
 
@@ -136,17 +152,20 @@ namespace nirc::irc::state {
             throw StateException("Realname has not assigned");
         }
     }
-
-    ClientContext *UserState::getContext() {
-        return this->context;
-    }
-
-    ServerState *UserState::getServerState() {
+    ServerState& UserState::getServerState() {
         return this->serverState;
     }
 
     std::mutex& UserState::getMutex() {
         return this->mutex;
+    }
+
+    network::TcpSocket& UserState::getSocket() {
+        return *this->socket;
+    }
+
+    int UserState::getDescriptor() const {
+        return this->descriptor;
     }
 
     bool UserState::operator==(const UserState& other) const {

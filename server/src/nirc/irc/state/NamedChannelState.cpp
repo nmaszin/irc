@@ -9,7 +9,7 @@
 
 namespace nirc::irc::state {
     NamedChannelState::NamedChannelState(
-        ServerState *serverState,
+        ServerState& serverState,
         std::vector<int>&& participants
     ) :
         ChannelState(serverState, std::move(participants))

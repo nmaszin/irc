@@ -11,7 +11,7 @@ namespace nirc::irc::state {
     class PrivateConversationChannelState : public ChannelState {
     public:
         PrivateConversationChannelState(
-            ServerState *serverState,
+            ServerState& serverState,
             int recipient
         );
 

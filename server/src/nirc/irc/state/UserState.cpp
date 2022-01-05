@@ -143,4 +143,18 @@ namespace nirc::irc::state {
     std::mutex& UserState::getMutex() {
         return this->mutex;
     }
+
+    bool UserState::operator==(const UserState& other) const {
+        std::lock_guard<std::mutex> guard(this->mutex);
+
+        if (!this->nick || !other.nick) {
+            throw StateException("Trying to compare uninitialized users");
+        }
+
+        return *this->nick == *other.nick;
+    }
+
+    bool UserState::operator!=(const UserState& other) const {
+        return !(*this == other);
+    }
 }

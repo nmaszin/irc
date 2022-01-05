@@ -39,6 +39,10 @@ namespace nirc::irc::state {
         ServerState *getServerState();
         std::mutex& getMutex();
 
+        bool operator==(const UserState& other) const;
+
+        bool operator!=(const UserState& other) const;
+
     protected:
         ServerState *serverState;
         std::mutex& mutex;

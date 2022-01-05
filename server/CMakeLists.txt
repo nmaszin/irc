@@ -40,10 +40,16 @@ add_executable(nirc
 
 	include/nirc/irc/state/ServerState.hpp
 	include/nirc/irc/state/UserState.hpp
+	include/nirc/irc/state/ChannelState.hpp
+	include/nirc/irc/state/NamedChannelState.hpp
+	include/nirc/irc/state/PrivateConversationChannelState.hpp
 	include/nirc/irc/state/StateException.hpp
 	src/nirc/irc/state/ServerState.cpp
 	src/nirc/irc/state/UserState.cpp
 	src/nirc/irc/state/StateException.cpp
+	src/nirc/irc/state/ChannelState.cpp
+	src/nirc/irc/state/NamedChannelState.cpp
+	src/nirc/irc/state/PrivateConversationChannelState.cpp
 
 	include/nirc/irc/commands/all.hpp
 	include/nirc/irc/commands/Command.hpp

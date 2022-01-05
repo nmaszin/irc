@@ -45,14 +45,16 @@ namespace nirc::irc::state {
 
         if (!this->nick) {
             throw StateException("NICK not called");
-        } else if (!this->username || !this->hostname) {
+        } else if (!this->username) {
             throw StateException("USER not called");
         }
+
+        auto host = this->socket->getInfo().getHostname();
 
         return std::make_unique<message::UserPrefix>(
             *this->nick,
             *this->username,
-            *this->hostname
+            host
         );
     }
 

@@ -7,6 +7,7 @@
 #include <nirc/irc/commands/Join.hpp>
 #include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/state/ChannelState.hpp>
+#include <nirc/utils/string.hpp>
 
 namespace nirc::irc::commands {
     Join::Join() :
@@ -38,12 +39,41 @@ namespace nirc::irc::commands {
             return;
         }
 
-        if (!serverState.doesChannelExists(channel)) {
+        /*if (!serverState.doesChannelExists(channel)) {
             serverState.initChannel(channel);
             std::cout << "Kanał został zainicjalizowany\n";
-        }
+        }*/
 
         auto& channelState = serverState.getChannel(channel);
         channelState.join(userState.getDescriptor());
+        
+        socket.send(message::OutputIrcMessage(
+            *serverPrefix,
+            "331",
+            {userState.getNickArgument(), channel, "No topic is set"}
+        ).toString());
+
+        std::vector<std::string> participantsNames;
+        for (const auto& participant : channelState.getParticipants()) {
+            auto name = serverState.getUserByDescriptor(participant).getNick();
+            participantsNames.push_back(name);
+        }
+
+        std::string participantsString = utils::join(participantsNames, " ");
+        socket.send(message::OutputIrcMessage(
+            *serverPrefix,
+            "353",
+            {userState.getNickArgument(), channel, "=", participantsString}
+        ).toString());
+
+        socket.send(message::OutputIrcMessage(
+            *serverPrefix,
+            "366",
+            {userState.getNickArgument(), channel, "End of /NAMES list"}
+        ).toString());
+
+
+
+        // eryk #dupa :No topic is set
     }
 }

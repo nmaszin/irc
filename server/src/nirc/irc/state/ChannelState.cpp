@@ -26,7 +26,8 @@ namespace nirc::irc::state {
 
     void ChannelState::join(int userDescriptor) {
         if (this->isOn(userDescriptor)) {
-            throw StateException("User has already joined to channel");
+            //throw StateException("User has already joined to channel");
+            return;
         }
 
         std::lock_guard<std::mutex> guard(this->mutex);

@@ -1,0 +1,12 @@
+#ifndef GLOBALS_H
+#define GLOBALS_H
+
+#define VIEW_SERVER_DEFAULT 0
+#define VIEW_SERVER_OPEN 1
+
+#define CHAT_WIDGET_NOT_EXISTING -1
+#define CHAT_WIDGET_SERVER 0
+
+#define LIST_WIDGET_NO_CURRENT_ITEM -1
+
+#endif

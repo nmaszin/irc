@@ -41,22 +41,24 @@ namespace nirc::irc::state {
     }
 
     void UserState::setNick(const std::string& nick) {
-        std::lock_guard<std::mutex> guard(this->mutex);
+        std::lock(
+            this->mutex,
+            this->serverState->nicksMutex
+        );
+        std::lock_guard<std::mutex> g1(this->mutex, std::adopt_lock);
+        std::lock_guard<std::mutex> g2(this->serverState->nicksMutex, std::adopt_lock);
 
-        auto& nicks = this->serverState->nicks;
-        {
-            std::lock_guard<std::mutex> guard(this->serverState->nicksMutex);
-            if (nicks.find(nick) != nicks.end()) {
-                throw StateException("Nick already used");
-            }
+        auto& nicks = this->serverState->nicks;        
+        if (nicks.find(nick) != nicks.end()) {
+            throw StateException("Nick already used");
         }
-
+        
         if (this->nick) {
             // Remove old nick from all nicks set
             nicks.erase(*this->nick);
         }
         this->nick = nick;
-        nicks.insert(*this->nick);
+        nicks[*this->nick] = this->descriptor;
     };
 
     const std::string& UserState::getNick() const {
@@ -133,6 +135,10 @@ namespace nirc::irc::state {
         } else {
             throw StateException("Realname has not assigned");
         }
+    }
+
+    ClientContext *UserState::getContext() {
+        return this->context;
     }
 
     ServerState *UserState::getServerState() {

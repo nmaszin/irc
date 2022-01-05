@@ -9,6 +9,7 @@
 
 namespace nirc::irc::state {
     class ServerState;
+    class ClientContext;
 
     class UserState {
     public:
@@ -34,6 +35,7 @@ namespace nirc::irc::state {
         const std::string& getRealname() const;
 
         ServerState *getServerState();
+        ClientContext *getContext();
         std::mutex& getMutex();
 
         bool operator==(const UserState& other) const;
@@ -42,6 +44,7 @@ namespace nirc::irc::state {
 
     protected:
         ServerState *serverState;
+        ClientContext *context;
         mutable std::mutex mutex;
 
         std::optional<std::string> nick; // Assign only by setNick to preserve data consistency

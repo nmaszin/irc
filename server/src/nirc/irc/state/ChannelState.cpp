@@ -65,4 +65,8 @@ namespace nirc::irc::state {
         const auto& userState = this->serverState->getUserState(userDescriptor);
         this->nicks.erase(userState.getNick());
     }
+
+    bool ChannelState::isChannel(const std::string& identifier) {
+        return identifier[0] == '#';
+    }
 }

@@ -10,12 +10,24 @@
 namespace nirc::irc::state {
     PrivateConversationChannelState::PrivateConversationChannelState(
             ServerState *serverState,
-            std::array<int, 2> participants
+            int recipient
         ) :
             ChannelState(
                 serverState,
-                std::vector<int>(participants.begin(), participants.end())
+                std::vector<int>({recipient})
             )
         {
         }
+
+    bool PrivateConversationChannelState::isOn(int userDescriptor) const {
+        return true;
+    }
+
+    void PrivateConversationChannelState::join(int userDescriptor) {
+        // Do nothing
+    }
+
+    void PrivateConversationChannelState::leave(int userDescriptor) {
+        // Do nothing
+    }
 }

@@ -7,6 +7,9 @@
 #include <nirc/cli/Options.hpp>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/ServerState.hpp>
+#include <nirc/irc/state/ChannelState.hpp>
+#include <nirc/irc/state/NamedChannelState.hpp>
+#include <nirc/irc/state/PrivateConversationChannelState.hpp>
 #include <nirc/irc/state/StateException.hpp>
 
 namespace nirc::irc::state {
@@ -60,6 +63,45 @@ namespace nirc::irc::state {
         } catch (const std::out_of_range&) {
             throw StateException("User with such descriptor does not exist");
         }
+    }
+
+    bool ServerState::doesChannelExists(const std::string& name) {
+        return this->channels.find(name) != this->channels.end();
+    }
+
+    ChannelState& ServerState::getChannelState(const std::string& name) {
+        if (!this->doesChannelExists(name)) {
+            throw StateException("Channel does not exist");
+        }
+
+        return *this->channels[name];
+    }
+
+    void ServerState::initPrivateConversation(const std::string& recipient) {
+        if (!this->isOn(recipient)) {
+            throw StateException("User does not exist");
+        }
+
+        if (this->doesChannelExists(recipient)) {
+            throw StateException("Channel has already exist");
+        }
+
+        int descriptor = this->nicks[recipient];
+        this->channels[recipient] = std::make_unique<PrivateConversationChannelState>(
+            this,
+            descriptor
+        );
+    }
+
+    void ServerState::initChannel(const std::string& name) {
+        if (this->doesChannelExists(name)) {
+            throw StateException("Channel has already exist");
+        }
+
+        this->channels[name] = std::make_unique<NamedChannelState>(
+            this,
+            std::vector<int>()
+        );
     }
 
     const cli::Options& ServerState::getOptions() const {

@@ -12,7 +12,11 @@ namespace nirc::irc::state {
     public:
         PrivateConversationChannelState(
             ServerState *serverState,
-            std::array<int, 2> participants
+            int recipient
         );
+
+        virtual bool isOn(int userDescriptor) const override;
+        virtual void join(int userDescriptor) override;
+        virtual void leave(int userDescriptor) override;
     };
 }

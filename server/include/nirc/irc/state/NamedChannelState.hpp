@@ -2,6 +2,7 @@
 
 #include <set>
 #include <algorithm>
+#include <string>
 #include <vector>
 #include <nirc/irc/state/ChannelState.hpp>
 #include <nirc/irc/state/ServerState.hpp>
@@ -14,7 +15,5 @@ namespace nirc::irc::state {
             ServerState *serverState,
             std::vector<int>&& participants
         );
-        void join(int userDescriptor);
-        void leave(int& userDescriptor);
     };
 }

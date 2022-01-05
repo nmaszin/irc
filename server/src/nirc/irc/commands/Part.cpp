@@ -3,17 +3,17 @@
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
-#include <nirc/irc/commands/Join.hpp>
+#include <nirc/irc/commands/Part.hpp>
 #include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/state/ChannelState.hpp>
 
 namespace nirc::irc::commands {
-    Join::Join() :
-        Command("JOIN")
+    Part::Part() :
+        Command("PART")
     {
     }
 
-    void Join::handle(ClientContext& context, const message::InputIrcMessage& message) {
+    void Part::handle(ClientContext& context, const message::InputIrcMessage& message) {
         auto& serverState = context.getServerState();
         auto serverPrefix = serverState.getServerPrefix();
         auto& userState = context.getUserState();
@@ -39,10 +39,15 @@ namespace nirc::irc::commands {
         }
 
         if (!serverState.doesChannelExists(channel)) {
-            serverState.initChannel(channel);
+            socket.send(message::OutputIrcMessage(
+                *serverPrefix,
+                "403",
+                {userState.getNickArgument(), "No such channel"}
+            ).toString());
+            return;
         }
 
         auto& channelState = serverState.getChannelState(channel);
-        channelState.join(userState.getDescriptor());
+        channelState.leave(userState.getDescriptor());
     }
 }

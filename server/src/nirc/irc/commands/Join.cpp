@@ -39,10 +39,13 @@ namespace nirc::irc::commands {
             return;
         }
 
-        /*if (!serverState.doesChannelExists(channel)) {
-            serverState.initChannel(channel);
-            std::cout << "Kanał został zainicjalizowany\n";
-        }*/
+        auto userPrefix = userState.getUserPrefix();
+        socket.send(message::OutputIrcMessage(
+            *userPrefix,
+            "JOIN",
+            {channel}
+        ).toString());
+
 
         auto& channelState = serverState.getChannel(channel);
         channelState.join(userState.getDescriptor());

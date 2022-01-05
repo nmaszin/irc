@@ -63,7 +63,7 @@ namespace nirc::irc::commands {
         socket.send(message::OutputIrcMessage(
             *serverPrefix,
             "353",
-            {userState.getNickArgument(), channel, "=", participantsString}
+            {userState.getNickArgument(), "=", channel, participantsString}
         ).toString());
 
         socket.send(message::OutputIrcMessage(

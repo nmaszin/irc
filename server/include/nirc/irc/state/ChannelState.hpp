@@ -9,7 +9,9 @@
 namespace nirc::irc::state {
     class ChannelState {
     public:
-        std::vector<int> getMessageRecipients(int senderDescriptor) const;
+        ChannelState(ServerState& serverState);
+
+        const std::vector<int>& getParticipants() const;
         virtual bool isOn(int userDescriptor) const;
         virtual void join(int userDescriptor);
         virtual void leave(int userDescriptor);
@@ -17,8 +19,6 @@ namespace nirc::irc::state {
         static bool isChannel(const std::string& identifier);
 
     protected:
-        ChannelState(ServerState& serverState, std::vector<int>&& participants);
-
         ServerState& serverState;
         std::vector<int> participants;
         std::set<std::string> nicks;

@@ -47,7 +47,7 @@ namespace nirc::irc::commands {
             return;
         }
 
-        auto& channelState = serverState.getChannelState(channel);
+        auto& channelState = serverState.getChannel(channel);
         channelState.leave(userState.getDescriptor());
     }
 }

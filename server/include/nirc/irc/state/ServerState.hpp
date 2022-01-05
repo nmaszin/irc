@@ -17,6 +17,7 @@ namespace nirc::irc::state {
 
         UserState& addUser(std::unique_ptr<network::TcpSocket>&& socket);
         UserState& getUserByDescriptor(int descriptor);
+        int getUserDescriptorByNick(const std::string& nick);
         void freeUser(UserState& state);
 
         const cli::Options& getOptions() const;
@@ -24,10 +25,9 @@ namespace nirc::irc::state {
         std::vector<std::unique_ptr<UserState>>& getUsers();
         bool isOn(const std::string& nick);
 
-        bool doesChannelExists(const std::string& name);
-        ChannelState& getChannelState(const std::string& name);
-        void initPrivateConversation(const std::string& recipient);
         void initChannel(const std::string& name);
+        bool doesChannelExists(const std::string& name);
+        ChannelState& getChannel(const std::string& name);
 
     protected:
         friend class UserState;

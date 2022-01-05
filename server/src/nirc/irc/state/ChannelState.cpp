@@ -8,32 +8,20 @@
 #include <nirc/irc/state/ChannelState.hpp>
 
 namespace nirc::irc::state {
-    std::vector<int> ChannelState::getMessageRecipients(int senderDescriptor) const {
+    ChannelState::ChannelState(ServerState& serverState) :
+        serverState(serverState)
+    {
+    }
+
+    const std::vector<int>& ChannelState::getParticipants() const {
         std::lock_guard<std::mutex> guard(this->mutex);
-
-        std::vector<int> recipients(this->participants.size());
-        for (const auto& participantDescriptor : this->participants) {
-            if (participantDescriptor != senderDescriptor) {
-                recipients.push_back(participantDescriptor);
-            }
-        }
-
-        return recipients;
+        return this->participants;
     }
 
     bool ChannelState::isOn(int userDescriptor) const {
         std::lock_guard<std::mutex> guard(this->mutex);
-
         auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
         return nicks.find(userState.getNick()) != nicks.end();
-    }
-
-    ChannelState::ChannelState(ServerState& serverState, std::vector<int>&& participants) :
-        serverState(serverState)
-    {
-        for (const auto& participant : participants) {
-            this->join(participant);
-        }
     }
 
     void ChannelState::join(int userDescriptor) {
@@ -48,12 +36,11 @@ namespace nirc::irc::state {
     }
 
     void ChannelState::leave(int userDescriptor) {
-        std::lock_guard<std::mutex> guard(this->mutex);
-
         if (!this->isOn(userDescriptor)) {
             throw StateException("User has not joined to channel");
         }
 
+        std::lock_guard<std::mutex> guard(this->mutex);
         auto it = std::find(this->participants.begin(), this->participants.end(), userDescriptor);
         if (it == this->participants.end()) {
             // Not necessary in theory but I add this check to prevent from data inconsistency

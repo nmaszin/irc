@@ -8,8 +8,6 @@
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/state/ChannelState.hpp>
-#include <nirc/irc/state/NamedChannelState.hpp>
-#include <nirc/irc/state/PrivateConversationChannelState.hpp>
 #include <nirc/irc/state/StateException.hpp>
 
 namespace nirc::irc::state {
@@ -42,6 +40,14 @@ namespace nirc::irc::state {
         return *this->users[descriptor];
     }
 
+    int ServerState::getUserDescriptorByNick(const std::string& nick) {
+        if (!this->isOn(nick)) {
+            throw StateException("User not exist");
+        }
+
+        return this->nicks[nick];
+    }
+
     void ServerState::freeUser(UserState& state) {
         std::lock_guard<std::mutex> guard(this->userAllocationMutex);
         this->users[state.descriptor] = nullptr;
@@ -71,30 +77,13 @@ namespace nirc::irc::state {
         return this->channels.find(name) != this->channels.end();
     }
 
-    ChannelState& ServerState::getChannelState(const std::string& name) {
+    ChannelState& ServerState::getChannel(const std::string& name) {
         if (!this->doesChannelExists(name)) {
-            throw StateException("Channel does not exist");
+            this->initChannel(name);
         }
 
         std::lock_guard<std::mutex> guard(this->channelsMutex);
         return *this->channels[name];
-    }
-
-    void ServerState::initPrivateConversation(const std::string& recipient) {
-        if (!this->isOn(recipient)) {
-            throw StateException("User does not exist");
-        }
-
-        if (this->doesChannelExists(recipient)) {
-            throw StateException("Channel has already exist");
-        }
-
-        std::lock_guard<std::mutex> guard(this->channelsMutex);
-        int descriptor = this->nicks[recipient];
-        this->channels[recipient] = std::make_unique<PrivateConversationChannelState>(
-            *this,
-            descriptor
-        );
     }
 
     void ServerState::initChannel(const std::string& name) {
@@ -103,9 +92,6 @@ namespace nirc::irc::state {
         }
 
         std::lock_guard<std::mutex> guard(this->channelsMutex);
-        this->channels[name] = std::make_unique<NamedChannelState>(
-            *this,
-            std::vector<int>()
-        );
+        this->channels[name] = std::make_unique<ChannelState>(*this);
     }
 }

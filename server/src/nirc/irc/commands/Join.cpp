@@ -43,7 +43,7 @@ namespace nirc::irc::commands {
             std::cout << "Kanał został zainicjalizowany\n";
         }
 
-        auto& channelState = serverState.getChannelState(channel);
+        auto& channelState = serverState.getChannel(channel);
         channelState.join(userState.getDescriptor());
     }
 }

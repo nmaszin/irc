@@ -39,23 +39,45 @@ namespace nirc::irc::commands {
         const auto& recipient = message.getArguments()[0];
         const auto& text = message.getArguments()[1];
 
-        if (!serverState.doesChannelExists(recipient)) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "401",
-                {userState.getNickArgument(), recipient, "No such nick/channel"}
-            ).toString());
-            return;
-        }
+        if (state::ChannelState::isChannel(recipient)) {
+            if (!serverState.doesChannelExists(recipient)) {
+                socket.send(message::OutputIrcMessage(
+                    *serverPrefix,
+                    "401",
+                    {userState.getNickArgument(), recipient, "No such nick/channel"}
+                ).toString());
+                return;
+            }
 
-        auto& channelState = serverState.getChannelState(recipient);
-        const auto& recipients = channelState.getMessageRecipients(userState.getDescriptor());
-        for (const auto& descriptor : recipients) {
-            std::cout << descriptor << " ";
+            auto senderDescriptor = userState.getDescriptor();
+            auto& channelState = serverState.getChannel(recipient);
+            for (const auto& participantDescriptor : channelState.getParticipants()) {
+                if (senderDescriptor != participantDescriptor) {
+                    auto& recipientState = serverState.getUserByDescriptor(participantDescriptor);
+                    auto& socket = recipientState.getSocket();
+                    auto prefix = recipientState.getUserPrefix();
 
+                    socket.send(message::OutputIrcMessage(
+                        *prefix,
+                        "PRIVMSG",
+                        {recipient, text}
+                    ).toString());
+                }
+            }
+        } else {
+            if (!serverState.isOn(recipient)) {
+                socket.send(message::OutputIrcMessage(
+                    *serverPrefix,
+                    "401",
+                    {userState.getNickArgument(), recipient, "No such nick/channel"}
+                ).toString());
+                return;
+            }
+
+            auto descriptor = serverState.getUserDescriptorByNick(recipient);
             auto& recipientState = serverState.getUserByDescriptor(descriptor);
-            auto &socket = recipientState.getSocket();
-            auto prefix = recipientState.getUserPrefix();
+            auto& socket = recipientState.getSocket();
+            auto prefix = userState.getUserPrefix();
 
             socket.send(message::OutputIrcMessage(
                 *prefix,
@@ -63,7 +85,5 @@ namespace nirc::irc::commands {
                 {recipient, text}
             ).toString());
         }
-
-        std::cout << "\n";
     }
 }

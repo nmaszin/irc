@@ -12,17 +12,14 @@ namespace nirc::irc::state {
 
     class UserState {
     public:
-        UserState(
-            ServerState *serverState,
-            std::mutex& mutex
-        );
+        UserState(ServerState *serverState);
         ~UserState();
 
-        std::unique_ptr<message::Prefix> getUserPrefix();
+        std::unique_ptr<message::Prefix> getUserPrefix() const ;
 
         void setNick(const std::string& nick);
         const std::string& getNick() const;
-        std::string getNickArgument();
+        std::string getNickArgument() const;
 
         void setUsername(const std::string& nick);
         const std::string& getUsername() const;
@@ -45,7 +42,7 @@ namespace nirc::irc::state {
 
     protected:
         ServerState *serverState;
-        std::mutex& mutex;
+        mutable std::mutex mutex;
 
         std::optional<std::string> nick; // Assign only by setNick to preserve data consistency
         std::optional<std::string> username;

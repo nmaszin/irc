@@ -12,9 +12,8 @@
 
 
 namespace nirc::irc::state {
-    UserState::UserState(ServerState *serverState, std::mutex& mutex) :
-        serverState(serverState),
-        mutex(mutex)
+    UserState::UserState(ServerState *serverState) :
+        serverState(serverState)
     {}
 
     UserState::~UserState() {
@@ -25,7 +24,7 @@ namespace nirc::irc::state {
         }
     }
 
-    std::unique_ptr<message::Prefix> UserState::getUserPrefix() {
+    std::unique_ptr<message::Prefix> UserState::getUserPrefix() const {
         std::lock_guard<std::mutex> guard(this->mutex);
 
         if (!this->nick) {
@@ -70,7 +69,7 @@ namespace nirc::irc::state {
         }
     }
 
-    std::string UserState::getNickArgument() {
+    std::string UserState::getNickArgument() const {
         std::lock_guard<std::mutex> guard(this->mutex);
 
         if (this->nick) {

@@ -12,8 +12,7 @@
 namespace nirc::irc::state {
     ServerState::ServerState(const cli::Options& options) :
         options(options),
-        users(options.getMaxClientsNumber()),
-        usersMutexes(options.getMaxClientsNumber())
+        users(options.getMaxClientsNumber())
     {}
 
     std::unique_ptr<message::Prefix> ServerState::getServerPrefix() {
@@ -41,11 +40,7 @@ namespace nirc::irc::state {
         for (int i = 0; i < this->users.size(); i++) {
             if (!users[i]) {
                 auto descriptor = i;
-                usersMutexes[descriptor] = std::make_unique<std::mutex>();
-                users[descriptor] = std::make_unique<state::UserState>(
-                    this,
-                    *usersMutexes[descriptor]
-                );
+                users[descriptor] = std::make_unique<state::UserState>(this);
                 return descriptor;
             }
         }
@@ -62,12 +57,6 @@ namespace nirc::irc::state {
                 throw std::out_of_range("");
             }
             userStatePtr = nullptr;
-
-            auto& userMutexPtr = usersMutexes.at(descriptor);
-            if (!userMutexPtr) {
-                throw std::out_of_range("");
-            }
-            userMutexPtr = nullptr;
         } catch (const std::out_of_range&) {
             throw StateException("User with such descriptor does not exist");
         }

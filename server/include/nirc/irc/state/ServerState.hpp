@@ -23,6 +23,8 @@ namespace nirc::irc::state {
         const cli::Options& getOptions() const;
         std::unique_ptr<message::Prefix> getServerPrefix();
         std::vector<std::unique_ptr<UserState>>& getUsers();
+        std::unordered_map<std::string, std::unique_ptr<ChannelState>>& getChannels();
+
         bool isOn(const std::string& nick);
 
         void createChannel(const std::string& name);

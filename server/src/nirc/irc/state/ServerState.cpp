@@ -67,6 +67,10 @@ namespace nirc::irc::state {
         return this->users;
     }
 
+    std::unordered_map<std::string, std::unique_ptr<ChannelState>>& ServerState::getChannels() {
+        return this->channels;
+    }
+
     bool ServerState::isOn(const std::string& nick) {
         std::lock_guard<std::mutex> guard(this->nicksMutex);
         return this->nicks.find(nick) != this->nicks.end();

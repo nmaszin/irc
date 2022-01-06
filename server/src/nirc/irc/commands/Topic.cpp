@@ -75,10 +75,15 @@ namespace nirc::irc::commands {
         channelState.setTopic(newTopic);
 
         auto userPrefix = userState.getUserPrefix();
-        socket.send(message::OutputIrcMessage(
-            *userPrefix,
-            "TOPIC",
-            {channel, newTopic}
-        ).toString());
+        for (auto participantDescriptor : channelState.getParticipants()) {
+            auto& participantSocket = serverState.getUserByDescriptor(participantDescriptor)
+                .getSocket();
+   
+            participantSocket.send(message::OutputIrcMessage(
+                *userPrefix,
+                "TOPIC",
+                {channel, newTopic}
+            ).toString());
+        }
     }
 }

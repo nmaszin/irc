@@ -32,5 +32,18 @@ namespace nirc::irc::commands {
         userState.setHostname(args[1]);
         userState.setServername(args[2]);
         userState.setRealname(args[3]);
+
+        /*auto userPrefix = userState.getUserPrefix();
+        for (const auto& userPtr : serverState.getUsers()) {
+            if (userPtr) {
+                auto& userSocket = userPtr->getSocket();
+            
+                userSocket.send(message::OutputIrcMessage(
+                    *userPrefix,
+                    "USER",
+                    {args[0], args[1], args[2], args[3]}
+                ).toString());
+            }
+        }*/
     }
 }

@@ -49,5 +49,17 @@ namespace nirc::irc::commands {
 
         auto& channelState = serverState.getChannel(channel);
         channelState.leave(userState.getDescriptor());
+
+        auto userPrefix = userState.getUserPrefix();
+        for (auto participantDescriptor : channelState.getParticipants()) {
+            auto& participantSocket = serverState.getUserByDescriptor(participantDescriptor)
+                .getSocket();
+
+            participantSocket.send(message::OutputIrcMessage(
+                *userPrefix,
+                "JOIN",
+                {channel}
+            ).toString());
+        }
     }
 }

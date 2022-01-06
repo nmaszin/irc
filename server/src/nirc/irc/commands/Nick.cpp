@@ -1,4 +1,7 @@
 #include <iostream>
+#include <optional>
+#include <memory>
+#include <nirc/irc/message/Prefix.hpp>
 #include <nirc/cli/Options.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
@@ -17,6 +20,13 @@ namespace nirc::irc::commands {
         auto& socket = userState.getSocket();
         auto& serverState = userState.getServerState();
         auto serverPrefix = serverState.getServerPrefix();
+
+        std::optional<std::unique_ptr<message::Prefix>> userPrefix;
+        try {
+            userPrefix = userState.getUserPrefix();
+        } catch (const state::StateException& e) {
+
+        }
 
         if (message.getArguments().size() < 1) {
             socket.send(message::OutputIrcMessage(
@@ -38,6 +48,24 @@ namespace nirc::irc::commands {
                 {userState.getNickArgument(), nick, "Nickname is already in use"}
             ).toString());
             return;
+        }
+
+        if (userPrefix) {
+            try {
+                for (const auto& userPtr : serverState.getUsers()) {
+                    if (userPtr) {
+                        auto& userSocket = userPtr->getSocket();
+                    
+                        userSocket.send(message::OutputIrcMessage(
+                            **userPrefix,
+                            "NICK",
+                            {nick}
+                        ).toString());
+                    }
+                }
+            } catch (const state::StateException& e) {
+                // Nevermind ;)
+            }   
         }
     }
 }

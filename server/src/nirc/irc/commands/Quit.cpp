@@ -27,6 +27,18 @@ namespace nirc::irc::commands {
             quitMessage = arguments[0];
         }
 
+        auto userPrefix = userState.getUserPrefix();
+        for (const auto& userPtr : serverState.getUsers()) {
+            if (userPtr) {
+                auto& userSocket = userPtr->getSocket();
+                userSocket.send(message::OutputIrcMessage(
+                    *userPrefix,
+                    "QUIT",
+                    std::vector<std::string>(arguments.begin(), arguments.end())
+                ).toString());
+            }
+        }
+
         socket.close();
     }
 }

@@ -51,14 +51,14 @@ namespace nirc::irc::commands {
 
             auto senderDescriptor = userState.getDescriptor();
             auto& channelState = serverState.getChannel(recipient);
+            auto userPrefix = userState.getUserPrefix();
             for (const auto& participantDescriptor : channelState.getParticipants()) {
                 if (senderDescriptor != participantDescriptor) {
                     auto& recipientState = serverState.getUserByDescriptor(participantDescriptor);
                     auto& socket = recipientState.getSocket();
-                    auto prefix = recipientState.getUserPrefix();
 
                     socket.send(message::OutputIrcMessage(
-                        *prefix,
+                        *userPrefix,
                         "PRIVMSG",
                         {recipient, text}
                     ).toString());

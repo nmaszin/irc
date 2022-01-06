@@ -19,6 +19,7 @@ namespace nirc::irc::commands {
         auto& socket = userState.getSocket();
         auto& serverState = userState.getServerState();
         auto serverPrefix = serverState.getServerPrefix();
+        auto userPrefix = userState.getUserPrefix();
 
         if (message.getArguments().size() < 1) {
             socket.send(message::OutputIrcMessage(
@@ -39,20 +40,24 @@ namespace nirc::irc::commands {
             return;
         }
 
-        auto userPrefix = userState.getUserPrefix();
-        socket.send(message::OutputIrcMessage(
-            *userPrefix,
-            "JOIN",
-            {channel}
-        ).toString());
-
         if (!serverState.doesChannelExist(channel)) {
             serverState.createChannel(channel);
         }
 
         auto& channelState = serverState.getChannel(channel);
         channelState.join(userState.getDescriptor());
-        
+
+        for (auto participantDescriptor : channelState.getParticipants()) {
+            auto& participantSocket = serverState.getUserByDescriptor(participantDescriptor)
+                .getSocket();
+            
+            participantSocket.send(message::OutputIrcMessage(
+                *userPrefix,
+                "JOIN",
+                {channel}
+            ).toString());
+        }
+
         socket.send(message::OutputIrcMessage(
             *serverPrefix,
             "331",

@@ -34,12 +34,22 @@ namespace nirc::irc::state {
 
     void ChannelState::join(int userDescriptor) {
         if (this->isOn(userDescriptor)) {
-            //throw StateException("User has already joined to channel");
             return;
         }
 
-        std::lock_guard<std::mutex> guard(this->mutex);
+        std::optional<int> channelOperator;
+
+        this->mutex.lock();
         this->participants.push_back(userDescriptor);
+        if (this->participants.size() == 1) {
+            channelOperator = this->participants[0];
+        }
+        this->mutex.unlock();
+
+        if (channelOperator) {
+            this->promoteToOperator(*channelOperator);
+        }
+
         const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
     }
 
@@ -57,6 +67,29 @@ namespace nirc::irc::state {
 
         this->participants.erase(it);
         const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
+    }
+
+    bool ChannelState::isOperator(int userDescriptor) const {
+        std::lock_guard<std::mutex> guard(this->mutex);
+        auto it = std::find(this->operators.begin(), this->operators.end(), userDescriptor);
+        return it != this->operators.end();
+    }
+
+    void ChannelState::promoteToOperator(int userDescriptor) {
+        if (this->isOperator(userDescriptor)) {
+            return;
+        }
+
+        std::lock_guard<std::mutex> guard(this->mutex);
+        this->operators.push_back(userDescriptor);
+    }
+
+    void ChannelState::degradeFromOperator(int userDescriptor) {
+        std::lock_guard<std::mutex> guard(this->mutex);
+        auto it = std::find(this->operators.begin(), this->operators.end(), userDescriptor);
+        if (it != this->operators.end()) {
+            this->operators.erase(it);
+        }
     }
 
     const std::optional<std::string>& ChannelState::getTopic() const {

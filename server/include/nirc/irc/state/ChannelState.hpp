@@ -14,9 +14,13 @@ namespace nirc::irc::state {
         ChannelState(ServerState& serverState);
 
         const std::vector<int>& getParticipants() const;
-        virtual bool isOn(int userDescriptor) const;
-        virtual void join(int userDescriptor);
-        virtual void leave(int userDescriptor);
+        bool isOn(int userDescriptor) const;
+        void join(int userDescriptor);
+        void leave(int userDescriptor);
+
+        bool isOperator(int userDescriptor) const;
+        void promoteToOperator(int userDescriptor);
+        void degradeFromOperator(int userDescriptor);
 
         const std::optional<std::string>& getTopic() const;
         void setTopic(const std::string& topic);
@@ -26,6 +30,7 @@ namespace nirc::irc::state {
     protected:
         ServerState& serverState;
         std::vector<int> participants;
+        std::vector<int> operators;
         mutable std::mutex mutex;
 
         std::optional<std::string> topic;

@@ -13,7 +13,7 @@
 #include <nirc/irc/commands/Topic.hpp>
 #include <nirc/irc/commands/List.hpp>
 #include <nirc/irc/commands/Names.hpp>
-
+#include <nirc/irc/commands/Mode.hpp>
 
 namespace nirc::irc::commands {
     std::vector<std::unique_ptr<commands::Command>> all() {
@@ -28,6 +28,7 @@ namespace nirc::irc::commands {
         result.push_back(std::make_unique<Topic>());
         result.push_back(std::make_unique<List>());
         result.push_back(std::make_unique<Names>());
+        result.push_back(std::make_unique<Mode>());
         return result;
     }
 }

@@ -23,7 +23,13 @@ namespace nirc::irc::state {
     bool ChannelState::isOn(int userDescriptor) const {
         std::lock_guard<std::mutex> guard(this->mutex);
         auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
-        return nicks.find(userState.getNick()) != nicks.end();
+        auto it = std::find(
+            this->participants.begin(),
+            this->participants.end(),
+            userDescriptor
+        );
+
+        return it != this->participants.end();
     }
 
     void ChannelState::join(int userDescriptor) {
@@ -35,7 +41,6 @@ namespace nirc::irc::state {
         std::lock_guard<std::mutex> guard(this->mutex);
         this->participants.push_back(userDescriptor);
         const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
-        this->nicks.insert(userState.getNick());
     }
 
     void ChannelState::leave(int userDescriptor) {
@@ -52,7 +57,6 @@ namespace nirc::irc::state {
 
         this->participants.erase(it);
         const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
-        this->nicks.erase(userState.getNick());
     }
 
     const std::optional<std::string>& ChannelState::getTopic() const {

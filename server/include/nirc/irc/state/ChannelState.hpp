@@ -26,7 +26,6 @@ namespace nirc::irc::state {
     protected:
         ServerState& serverState;
         std::vector<int> participants;
-        std::set<std::string> nicks;
         mutable std::mutex mutex;
 
         std::optional<std::string> topic;

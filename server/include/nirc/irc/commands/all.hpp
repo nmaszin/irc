@@ -10,6 +10,7 @@
 #include <nirc/irc/commands/IsOn.hpp>
 #include <nirc/irc/commands/Quit.hpp>
 #include <nirc/irc/commands/Part.hpp>
+#include <nirc/irc/commands/Topic.hpp>
 
 namespace nirc::irc::commands {
     std::vector<std::unique_ptr<commands::Command>> all() {
@@ -21,6 +22,7 @@ namespace nirc::irc::commands {
         result.push_back(std::make_unique<IsOn>());
         result.push_back(std::make_unique<Quit>());
         result.push_back(std::make_unique<Part>());
+        result.push_back(std::make_unique<Topic>());
         return result;
     }
 }

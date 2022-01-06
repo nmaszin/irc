@@ -25,9 +25,10 @@ namespace nirc::irc::state {
         std::vector<std::unique_ptr<UserState>>& getUsers();
         bool isOn(const std::string& nick);
 
-        void initChannel(const std::string& name);
-        bool doesChannelExists(const std::string& name);
+        void createChannel(const std::string& name);
+        bool doesChannelExist(const std::string& name);
         ChannelState& getChannel(const std::string& name);
+        void deleteChannel(const std::string& name);
 
     protected:
         friend class UserState;

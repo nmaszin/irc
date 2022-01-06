@@ -40,7 +40,7 @@ namespace nirc::irc::commands {
         const auto& text = message.getArguments()[1];
 
         if (state::ChannelState::isChannel(recipient)) {
-            if (!serverState.doesChannelExists(recipient)) {
+            if (!serverState.doesChannelExist(recipient)) {
                 socket.send(message::OutputIrcMessage(
                     *serverPrefix,
                     "401",

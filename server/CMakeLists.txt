@@ -54,6 +54,7 @@ add_executable(nirc
 	include/nirc/irc/commands/IsOn.hpp
 	include/nirc/irc/commands/Quit.hpp
 	include/nirc/irc/commands/Part.hpp
+	include/nirc/irc/commands/Topic.hpp
 	src/nirc/irc/commands/Command.cpp
 	src/nirc/irc/commands/Join.cpp
 	src/nirc/irc/commands/Nick.cpp
@@ -62,6 +63,7 @@ add_executable(nirc
 	src/nirc/irc/commands/IsOn.cpp
 	src/nirc/irc/commands/Quit.cpp
 	src/nirc/irc/commands/Part.cpp
+	src/nirc/irc/commands/Topic.cpp
 
 	include/nirc/irc/handler/InputMessageHandler.hpp
 	include/nirc/irc/handler/MessageHandlerException.hpp

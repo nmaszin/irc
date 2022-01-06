@@ -1,6 +1,8 @@
 #include <vector>
 #include <mutex>
 #include <algorithm>
+#include <optional>
+#include <string>
 #include <nirc/cli/Options.hpp>
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/irc/state/UserState.hpp>
@@ -51,6 +53,14 @@ namespace nirc::irc::state {
         this->participants.erase(it);
         const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
         this->nicks.erase(userState.getNick());
+    }
+
+    const std::optional<std::string>& ChannelState::getTopic() const {
+        return this->topic;
+    }
+
+    void ChannelState::setTopic(const std::string& topic) {
+        this->topic = topic;
     }
 
     bool ChannelState::isChannel(const std::string& identifier) {

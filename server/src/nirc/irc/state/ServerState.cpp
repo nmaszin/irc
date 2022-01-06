@@ -72,22 +72,22 @@ namespace nirc::irc::state {
         return this->nicks.find(nick) != this->nicks.end();
     }
 
-    bool ServerState::doesChannelExists(const std::string& name) {
+    bool ServerState::doesChannelExist(const std::string& name) {
         std::lock_guard<std::mutex> guard(this->channelsMutex);
         return this->channels.find(name) != this->channels.end();
     }
 
     ChannelState& ServerState::getChannel(const std::string& name) {
-        if (!this->doesChannelExists(name)) {
-            this->initChannel(name);
+        if (!this->doesChannelExist(name)) {
+            throw StateException("Channel does not exist");;
         }
 
         std::lock_guard<std::mutex> guard(this->channelsMutex);
         return *this->channels[name];
     }
 
-    void ServerState::initChannel(const std::string& name) {
-        if (this->doesChannelExists(name)) {
+    void ServerState::createChannel(const std::string& name) {
+        if (this->doesChannelExist(name)) {
             throw StateException("Channel has already exist");
         }
 

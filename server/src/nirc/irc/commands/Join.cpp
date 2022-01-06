@@ -46,6 +46,9 @@ namespace nirc::irc::commands {
             {channel}
         ).toString());
 
+        if (!serverState.doesChannelExist(channel)) {
+            serverState.createChannel(channel);
+        }
 
         auto& channelState = serverState.getChannel(channel);
         channelState.join(userState.getDescriptor());
@@ -74,9 +77,5 @@ namespace nirc::irc::commands {
             "366",
             {userState.getNickArgument(), channel, "End of /NAMES list"}
         ).toString());
-
-
-
-        // eryk #dupa :No topic is set
     }
 }

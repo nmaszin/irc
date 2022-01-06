@@ -38,7 +38,7 @@ namespace nirc::irc::commands {
             return;
         }
 
-        if (!serverState.doesChannelExists(channel)) {
+        if (!serverState.doesChannelExist(channel)) {
             socket.send(message::OutputIrcMessage(
                 *serverPrefix,
                 "403",

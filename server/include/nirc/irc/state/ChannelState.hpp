@@ -2,6 +2,8 @@
 
 #include <set>
 #include <vector>
+#include <string>
+#include <optional>
 #include <mutex>
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/irc/state/UserState.hpp>
@@ -16,6 +18,9 @@ namespace nirc::irc::state {
         virtual void join(int userDescriptor);
         virtual void leave(int userDescriptor);
 
+        const std::optional<std::string>& getTopic() const;
+        void setTopic(const std::string& topic);
+
         static bool isChannel(const std::string& identifier);
 
     protected:
@@ -23,5 +28,7 @@ namespace nirc::irc::state {
         std::vector<int> participants;
         std::set<std::string> nicks;
         mutable std::mutex mutex;
+
+        std::optional<std::string> topic;
     };
 }

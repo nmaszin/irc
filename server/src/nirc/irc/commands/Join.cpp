@@ -29,12 +29,17 @@ namespace nirc::irc::commands {
             privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
         }
 
-        if (!serverState.doesChannelExist(channel)) {
+        if (serverState.doesChannelExist(channel)) {
+            auto& channelState = serverState.getChannel(channel);
+            if (channelState.isBanned(userState)) {
+                privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&channel);
+            }
+        } else {
             serverState.createChannel(channel);
         }
 
-        auto& channelState = serverState.getChannel(channel);
         int userDescriptor = userState.getDescriptor();
+        auto& channelState = serverState.getChannel(channel);
         if (channelState.isOn(userDescriptor)) {
             return;
         }

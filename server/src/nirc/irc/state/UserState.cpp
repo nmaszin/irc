@@ -59,9 +59,9 @@ namespace nirc::irc::state {
         auto host = this->socket->getInfo().getHostname();
 
         return std::make_unique<message::UserPrefix>(
-            *this->nick,
-            *this->username,
-            host
+            std::string(*this->nick),
+            std::optional<std::string>(*this->username),
+            std::move(host)
         );
     }
 

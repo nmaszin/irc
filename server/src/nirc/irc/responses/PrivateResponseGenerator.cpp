@@ -198,7 +198,13 @@ namespace nirc::irc::responses {
         return { *command, "Not enough parameters" };
     }
  
- 
+    template <>
+    std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_BANNEDFROMCHAN>(
+        const std::string *channel
+    ) {
+        return { *channel, ":Cannot join channel (+b)" };
+    }
+
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_CHANOPRIVSNEEDED>(
         const std::string *channel

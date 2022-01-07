@@ -32,16 +32,16 @@ namespace nirc::irc::commands {
             privateRespondent.error<Response::ERR_NONICKNAMEGIVEN>();
         }
 
+        if (userPrefix) {
+            auto broadcastRespondent = serverState.getBroadcastRespondent(userState, true);
+            broadcastRespondent.send(message);
+        }
+
         auto& nick = message.getArguments()[0];
         try {
             userState.setNick(nick);
         } catch (const state::StateException& e) {
             privateRespondent.error<Response::ERR_NICKNAMEINUSE>(&nick);
-        }
-
-        if (userPrefix) {
-            auto broadcastRespondent = serverState.getBroadcastRespondent(userState);
-            broadcastRespondent.send(message);
         }
     }
 }

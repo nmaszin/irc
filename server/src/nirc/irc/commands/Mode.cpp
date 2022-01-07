@@ -72,7 +72,12 @@ namespace nirc::irc::commands {
                     }
                 }
                 if (banFlag) {
-                    auto& flag = message.getArguments()[argumentIndex++];
+                    auto& mask = message.getArguments()[argumentIndex++];
+                    if (*banFlag) {
+                        channel.ban(mask);
+                    } else {
+                        channel.unban(mask);
+                    }
                 }
 
                 auto broadcastRespondent = channel.getBroadcastRespondent(userState, true);

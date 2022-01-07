@@ -89,6 +89,48 @@ namespace nirc::irc::state {
         }
     }
 
+    bool ChannelState::isBanned(UserState& userState) const {
+        for (const auto& mask : this->bans) {
+            auto prefix = message::UserPrefix::fromString(mask);
+            if (prefix.getNick() != "*" && prefix.getNick() != userState.getNick()) {
+                continue;
+            }
+
+            if (prefix.getUsername()) {
+                auto& username = *prefix.getUsername();
+                if (username != "*" && username != userState.getUsername()) {
+                    continue;
+                }
+            }
+
+            if (prefix.getHostname()) {
+                auto& hostname = *prefix.getHostname();
+                if (hostname != "*" && hostname != userState.getHostname()) {
+                    continue;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void ChannelState::ban(const std::string& mask) {
+        if (std::find(this->bans.begin(), this->bans.end(), mask) != this->bans.end()) {
+            return;
+        }
+
+        this->bans.push_back(mask);
+    }
+
+    void ChannelState::unban(const std::string& mask) {
+        auto it = std::find(this->bans.begin(), this->bans.end(), mask);
+        if (it != this->bans.end()) {
+            bans.erase(it);
+        }
+    }
+
     const std::optional<std::string>& ChannelState::getTopic() const {
         return this->topic;
     }

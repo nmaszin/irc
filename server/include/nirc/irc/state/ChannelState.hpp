@@ -23,6 +23,10 @@ namespace nirc::irc::state {
         void promoteToOperator(int userDescriptor);
         void degradeFromOperator(int userDescriptor);
 
+        bool isBanned(UserState& state) const;
+        void ban(const std::string& mask);
+        void unban(const std::string& mask);
+
         const std::optional<std::string>& getTopic() const;
         void setTopic(const std::string& topic);
 
@@ -34,6 +38,8 @@ namespace nirc::irc::state {
         ServerState& serverState;
         std::vector<int> participants;
         std::vector<int> operators;
+        std::vector<std::string> bans;
+
         mutable std::mutex mutex;
 
         std::optional<std::string> topic;

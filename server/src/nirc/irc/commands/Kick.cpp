@@ -40,6 +40,10 @@ namespace nirc::irc::commands {
             privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channel);
         }
 
+        if (!serverState.isOn(nick)) {
+            privateRespondent.error<Response::ERR_NOSUCHNICK>(&nick);
+        }
+
         auto kickedUserDescriptor = serverState.getUserDescriptorByNick(nick);
         if (!channelState.isOn(kickedUserDescriptor)) {
             privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channel);

@@ -23,6 +23,7 @@ namespace nirc::irc::responses {
         ERR_NICKNAMEINUSE = 433,
         ERR_NOTONCHANNEL = 442,
         ERR_NEEDMOREPARAMS = 461,
+        ERR_BANNEDFROMCHAN = 474,
         ERR_CHANOPRIVSNEEDED = 482
     };
 }

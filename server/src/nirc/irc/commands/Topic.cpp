@@ -49,7 +49,7 @@ namespace nirc::irc::commands {
         const auto& newTopic = message.getArguments()[1];
         channelState.setTopic(newTopic);
 
-        auto broadcastRespondent = channelState.getBroadcastRespondent(userState);
+        auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
         broadcastRespondent.send(message);
     }
 }

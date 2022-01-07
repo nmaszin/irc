@@ -67,7 +67,7 @@ namespace nirc::irc::responses {
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_NAMREPLY>(std::string channel, std::vector<std::string> participants) {
-        return { channel, utils::join(participants, " ") };
+        return { "=", channel, utils::join(participants, " ") };
     }
 
     template <>

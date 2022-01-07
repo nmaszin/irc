@@ -26,7 +26,7 @@ namespace nirc::irc::handler {
         } catch (const std::out_of_range&) {
             using responses::Response;
             auto& privateRespondent = userState.getPrivateRespondent();
-            privateRespondent.error<Response::ERR_UNKNOWNCOMMAND>(message.getCommand());
+            //privateRespondent.error<Response::ERR_UNKNOWNCOMMAND>(message.getCommand());
         }
     }
 }

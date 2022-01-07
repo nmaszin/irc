@@ -21,21 +21,21 @@ namespace nirc::irc::commands {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {
-            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(this->getName());
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
         const auto& channel = message.getArguments()[0];
         if (!serverState.doesChannelExist(channel)) {
-            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(channel);
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
         }
 
         auto& channelState = serverState.getChannel(channel);
         if (message.getArguments().size() < 2) {
             const auto& topic = channelState.getTopic();
             if (topic) {
-                privateRespondent.send<Response::RPL_TOPIC>(channel, *topic);
+                privateRespondent.send<Response::RPL_TOPIC>(&channel, &*topic);
             } else {
-                privateRespondent.send<Response::RPL_NOTOPIC>(channel);
+                privateRespondent.send<Response::RPL_NOTOPIC>(&channel);
             }
 
             return;
@@ -43,7 +43,7 @@ namespace nirc::irc::commands {
 
         auto userDescriptor = userState.getDescriptor();
         if (!channelState.isOn(userDescriptor)) {
-            privateRespondent.error<Response::ERR_NOTONCHANNEL>(channel);
+            privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channel);
         }
 
         const auto& newTopic = message.getArguments()[1];

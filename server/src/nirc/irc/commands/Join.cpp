@@ -21,12 +21,12 @@ namespace nirc::irc::commands {
         auto& privateRespondent = userState.getPrivateRespondent();
         
         if (message.getArguments().size() < 1) {
-            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(std::string("JOIN"));
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
         const auto& channel = message.getArguments()[0];
         if (!state::ChannelState::isChannel(channel)) {
-            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(channel);
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
         }
 
         if (!serverState.doesChannelExist(channel)) {
@@ -39,8 +39,8 @@ namespace nirc::irc::commands {
         auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
         broadcastRespondent.send(message);
 
-        privateRespondent.send<Response::RPL_NOTOPIC>(channel);
-        privateRespondent.send<Response::RPL_NAMREPLY>(channel, std::ref(serverState), std::ref(channelState));
-        privateRespondent.send<Response::RPL_ENDOFNAMES>(channel);
+        privateRespondent.send<Response::RPL_NOTOPIC>(&channel);
+        privateRespondent.send<Response::RPL_NAMREPLY>(&channel, &serverState, &channelState);
+        privateRespondent.send<Response::RPL_ENDOFNAMES>(&channel);
     }
 }

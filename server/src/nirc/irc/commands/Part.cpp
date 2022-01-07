@@ -20,12 +20,12 @@ namespace nirc::irc::commands {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {
-            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(this->getName());
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
         const auto& channel = message.getArguments()[0];
         if (!state::ChannelState::isChannel(channel) || !serverState.doesChannelExist(channel)) {
-            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(channel);
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
         }
 
         auto& channelState = serverState.getChannel(channel);

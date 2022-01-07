@@ -22,7 +22,7 @@ namespace nirc::irc::commands {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {
-            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(std::string("ISON"));
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
         std::vector<std::string> nicks;
@@ -32,6 +32,6 @@ namespace nirc::irc::commands {
             }
         }
 
-        privateRespondent.send<Response::RPL_ISON>(nicks);
+        privateRespondent.send<Response::RPL_ISON>(&nicks);
     }
 }

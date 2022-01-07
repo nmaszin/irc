@@ -21,7 +21,7 @@ namespace nirc::irc::commands {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {
-            privateRespondent.error<Response::ERR_NORECIPIENT>(this->getName());
+            privateRespondent.error<Response::ERR_NORECIPIENT>(&this->getName());
         } else if (message.getArguments().size() < 2) {
             privateRespondent.error<Response::ERR_NOTEXTTOSEND>();
         }
@@ -31,7 +31,7 @@ namespace nirc::irc::commands {
 
         if (state::ChannelState::isChannel(recipient)) {
             if (!serverState.doesChannelExist(recipient)) {
-                privateRespondent.error<Response::ERR_NOSUCHNICK>(recipient);
+                privateRespondent.error<Response::ERR_NOSUCHNICK>(&recipient);
             }
 
             auto& channelState = serverState.getChannel(recipient);
@@ -39,7 +39,7 @@ namespace nirc::irc::commands {
             broadcastRespondent.send(message);
         } else {
             if (!serverState.isOn(recipient)) {
-                privateRespondent.error<Response::ERR_NOSUCHNICK>(recipient);
+                privateRespondent.error<Response::ERR_NOSUCHNICK>(&recipient);
             }
 
             auto descriptor = serverState.getUserDescriptorByNick(recipient);

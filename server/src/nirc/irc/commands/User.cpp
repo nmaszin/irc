@@ -19,7 +19,7 @@ namespace nirc::irc::commands {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 4) {
-            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(this->getName());
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
         const auto& args = message.getArguments();

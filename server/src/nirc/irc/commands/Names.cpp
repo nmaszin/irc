@@ -22,8 +22,8 @@ namespace nirc::irc::commands {
 
         for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {
             auto& channelState = *channelStatePtr;
-            privateRespondent.send<Response::RPL_NAMREPLY>(channelName, std::ref(serverState), std::ref(channelState));
-            privateRespondent.send<Response::RPL_ENDOFNAMES>(channelName);
+            privateRespondent.send<Response::RPL_NAMREPLY>(&channelName, &serverState, &channelState);
+            privateRespondent.send<Response::RPL_ENDOFNAMES>(&channelName);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace nirc::irc::commands {
         int userDescriptor = userState.getDescriptor();
 
         if (message.getArguments().size() < 2) {
-            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(this->getName());
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
         auto& recipientName = message.getArguments()[0];
@@ -32,12 +32,12 @@ namespace nirc::irc::commands {
         if (state::ChannelState::isChannel(recipientName)) {
             auto& channelName = recipientName;
             if (!serverState.doesChannelExist(channelName)) {
-                privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(channelName);
+                privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channelName);
             }
 
             auto& channel = serverState.getChannel(channelName);
             if (!channel.isOn(userDescriptor)) {
-                privateRespondent.error<Response::ERR_NOTONCHANNEL>(channelName);
+                privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channelName);
             }
 
             std::optional<bool> plus;
@@ -57,7 +57,7 @@ namespace nirc::irc::commands {
 
             if (plus) {
                 if (!channel.isOperator(userDescriptor)) {
-                    privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(channelName);
+                    privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channelName);
                 }
 
                 auto& args = message.getArguments();
@@ -79,7 +79,7 @@ namespace nirc::irc::commands {
                 auto broadcastRespondent = channel.getBroadcastRespondent(userState);
                 broadcastRespondent.send(message);
             } else {
-                privateRespondent.send<Response::RPL_CHANNELMODEIS>(channelName);
+                privateRespondent.send<Response::RPL_CHANNELMODEIS>(&channelName);
             }
         }
     }

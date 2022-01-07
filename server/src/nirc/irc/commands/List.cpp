@@ -23,7 +23,7 @@ namespace nirc::irc::commands {
 
         privateRespondent.send<Response::RPL_LISTSTART>();
         for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {
-            privateRespondent.send<Response::RPL_LIST>(channelName, channelStatePtr.get());
+            privateRespondent.send<Response::RPL_LIST>(&channelName, channelStatePtr.get());
         }
         privateRespondent.send<Response::RPL_LISTEND>();
     }

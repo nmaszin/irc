@@ -10,7 +10,6 @@
 #include <nirc/irc/ServerMonitor.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
-#include <nirc/irc/handler/MessageHandlerException.hpp>
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/irc/commands/all.hpp>
 
@@ -51,8 +50,8 @@ namespace nirc::irc {
 			while (true) {
 				this->handleMessage(*userState);
 			}
-		} catch (const std::exception& e) {
-			std::cout << "WYSTĄPIŁ BŁĄD: " << e.what() << "\n";
+		} catch (const network::TcpException&) {
+			// Handle client disconnection
 			this->serverState.freeUser(*userState);
 		}
 	}
@@ -62,8 +61,10 @@ namespace nirc::irc {
 		try {
 			irc::message::InputIrcMessage msg(socket.receiveUntil("\n"));
 			messageHandler.handle(userState, msg);
-		} catch (const handler::MessageHandlerException&) {
-			std::cerr << "Invalid command\n";
+		} catch (const responses::ResponseException&) {
+			// Do nothing
+			// Error message has been already sent to client
+			// Exception only breaks processing the error commend
 		}
 	}
 }

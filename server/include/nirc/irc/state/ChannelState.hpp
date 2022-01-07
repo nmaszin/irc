@@ -26,7 +26,7 @@ namespace nirc::irc::state {
         const std::optional<std::string>& getTopic() const;
         void setTopic(const std::string& topic);
 
-        responses::BroadcastRespondent getBroadcastRespondent(UserState& sender) const;
+        responses::BroadcastRespondent getBroadcastRespondent(UserState& sender, bool includeYourself=false) const;
 
         static bool isChannel(const std::string& identifier);
 

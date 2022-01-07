@@ -101,14 +101,16 @@ namespace nirc::irc::state {
         this->topic = topic;
     }
 
-    responses::BroadcastRespondent ChannelState::getBroadcastRespondent(UserState& sender) const {
+    responses::BroadcastRespondent ChannelState::getBroadcastRespondent(UserState& sender, bool includeYourself) const {
         std::lock_guard<std::mutex> guard(this->mutex);
 
         std::vector<network::TcpSocket*> sockets;
         for (auto participantDescriptor : this->participants) {
-            auto& user = this->serverState.getUserByDescriptor(participantDescriptor);
-            auto& socket = user.getSocket();
-            sockets.push_back(&socket);
+            if (includeYourself || participantDescriptor != sender.getDescriptor()) {
+                auto& user = this->serverState.getUserByDescriptor(participantDescriptor);
+                auto& socket = user.getSocket();
+                sockets.push_back(&socket);
+            }
         }
 
         return responses::BroadcastRespondent(

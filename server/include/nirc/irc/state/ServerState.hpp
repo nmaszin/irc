@@ -34,7 +34,7 @@ namespace nirc::irc::state {
         ChannelState& getChannel(const std::string& name);
         void deleteChannel(const std::string& name);
 
-        responses::BroadcastRespondent getBroadcastRespondent(UserState& sender) const;
+        responses::BroadcastRespondent getBroadcastRespondent(UserState& sender, bool includeYourself=false) const;
 
     protected:
         friend class UserState;

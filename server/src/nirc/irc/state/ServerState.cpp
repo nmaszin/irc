@@ -99,13 +99,15 @@ namespace nirc::irc::state {
         this->channels[name] = std::make_unique<ChannelState>(*this);
     }
 
-    responses::BroadcastRespondent ServerState::getBroadcastRespondent(UserState& sender) const {
+    responses::BroadcastRespondent ServerState::getBroadcastRespondent(UserState& sender, bool includeYourself) const {
         std::lock_guard<std::mutex> guard(this->userAllocationMutex);
 
         std::vector<network::TcpSocket*> sockets;
         for (const auto& userPtr : this->users) {
             if (userPtr) {
-                sockets.push_back(&userPtr->getSocket());
+                if (includeYourself || userPtr->getDescriptor() != sender.getDescriptor()) {
+                    sockets.push_back(&userPtr->getSocket());
+                }
             }
         }
 

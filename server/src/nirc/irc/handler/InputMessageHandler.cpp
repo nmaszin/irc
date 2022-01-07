@@ -2,8 +2,8 @@
 #include <stdexcept>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
-#include <nirc/irc/handler/InputMessageHandler.hpp>
 #include <nirc/irc/handler/MessageHandlerException.hpp>
+#include <nirc/irc/handler/InputMessageHandler.hpp>
 #include <nirc/irc/state/UserState.hpp>
 
 namespace nirc::irc::handler {
@@ -24,7 +24,9 @@ namespace nirc::irc::handler {
             auto& command = this->mapping.at(message.getCommand());
             command->handle(userState, message);
         } catch (const std::out_of_range&) {
-            throw MessageHandlerException("Command does not exist");
+            using responses::Response;
+            auto& privateRespondent = userState.getPrivateRespondent();
+            privateRespondent.error<Response::ERR_UNKNOWNCOMMAND>(message.getCommand());
         }
     }
 }

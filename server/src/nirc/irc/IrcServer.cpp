@@ -10,6 +10,7 @@
 #include <nirc/irc/ServerMonitor.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
+#include <nirc/irc/message/MessageParsingException.hpp>
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/irc/commands/all.hpp>
 
@@ -59,9 +60,11 @@ namespace nirc::irc {
 	void IrcServer::handleMessage(state::UserState& userState) {
 		auto& socket = userState.getSocket();
 		try {
-			irc::message::InputIrcMessage msg(socket.receiveUntil("\n"));
+			message::InputIrcMessage msg(socket.receiveUntil("\n"));
 			messageHandler.handle(userState, msg);
-		} catch (const responses::ResponseException&) {
+		} catch (const message::MessageParsingException& e) {
+			// Do nothing
+		}catch (const responses::ResponseException&) {
 			// Do nothing
 			// Error message has been already sent to client
 			// Exception only breaks processing the error commend

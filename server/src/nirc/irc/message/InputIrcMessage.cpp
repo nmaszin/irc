@@ -2,11 +2,15 @@
 #include <vector>
 #include <regex>
 #include <nirc/irc/message/InputIrcMessage.hpp>
+#include <nirc/irc/message/MessageParsingException.hpp>
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::message {
     InputIrcMessage::InputIrcMessage(const std::string& message) {
         auto parts = split_message(message);
+        if (parts.size() == 0) {
+            throw MessageParsingException("Empty message");
+        }
 
         auto current_index = 0;
         if (parts[current_index][0] == ':') {
@@ -16,6 +20,11 @@ namespace nirc::irc::message {
                 prefix_with_colon.end()
             );
         }
+
+        if (current_index >= parts.size()) {
+            throw MessageParsingException("Command not given");
+        }
+
         this->command = parts[current_index++];
         this->arguments = std::vector<std::string>(
             parts.begin() + current_index,

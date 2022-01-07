@@ -14,6 +14,7 @@
 #include <nirc/irc/commands/List.hpp>
 #include <nirc/irc/commands/Names.hpp>
 #include <nirc/irc/commands/Mode.hpp>
+#include <nirc/irc/commands/Kick.hpp>
 
 namespace nirc::irc::commands {
     std::vector<std::unique_ptr<commands::Command>> all() {
@@ -29,6 +30,7 @@ namespace nirc::irc::commands {
         result.push_back(std::make_unique<List>());
         result.push_back(std::make_unique<Names>());
         result.push_back(std::make_unique<Mode>());
+        result.push_back(std::make_unique<Kick>());
         return result;
     }
 }

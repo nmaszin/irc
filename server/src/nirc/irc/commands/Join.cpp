@@ -40,14 +40,7 @@ namespace nirc::irc::commands {
         broadcastRespondent.send(message);
 
         privateRespondent.send<Response::RPL_NOTOPIC>(channel);
-
-        std::vector<std::string> participantsNames;
-        for (const auto& participant : channelState.getParticipants()) {
-            auto name = serverState.getUserByDescriptor(participant).getNick();
-            participantsNames.push_back(name);
-        }
-
-        privateRespondent.send<Response::RPL_NAMREPLY>(channel, participantsNames);
+        privateRespondent.send<Response::RPL_NAMREPLY>(channel, std::ref(serverState), std::ref(channelState));
         privateRespondent.send<Response::RPL_ENDOFNAMES>(channel);
     }
 }

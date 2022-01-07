@@ -21,14 +21,8 @@ namespace nirc::irc::commands {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {
-            std::vector<std::string> participantsNames;
-            for (const auto& participantDescriptor : channelStatePtr->getParticipants()) {
-                const auto& user = serverState.getUserByDescriptor(participantDescriptor);
-                const auto& nick = user.getNick();
-                participantsNames.push_back(nick);
-            }
-
-            privateRespondent.send<Response::RPL_NAMREPLY>(channelName, participantsNames);
+            auto& channelState = *channelStatePtr;
+            privateRespondent.send<Response::RPL_NAMREPLY>(channelName, std::ref(serverState), std::ref(channelState));
             privateRespondent.send<Response::RPL_ENDOFNAMES>(channelName);
         }
     }

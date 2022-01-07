@@ -1,11 +1,13 @@
 #include <string>
 #include <memory>
+#include <nirc/cli/Options.hpp>
 #include <nirc/irc/responses/Response.hpp>
 #include <nirc/irc/responses/ResponseException.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/utils/string.hpp>
 #include <nirc/irc/responses/PrivateResponseGenerator.hpp>
+#include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/state/ChannelState.hpp>
 
 namespace nirc::irc::responses {
@@ -66,8 +68,24 @@ namespace nirc::irc::responses {
     }
 
     template <>
-    std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_NAMREPLY>(std::string channel, std::vector<std::string> participants) {
-        return { "=", channel, utils::join(participants, " ") };
+    std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_NAMREPLY>(
+        std::string channel,
+        std::reference_wrapper<state::ServerState> serverStateWrapper,
+        std::reference_wrapper<state::ChannelState> channelStateWrapper
+    ) {
+        auto& serverState = serverStateWrapper.get();
+        auto& channelState = channelStateWrapper.get();
+
+        std::vector<std::string> participantsNames;
+        for (const auto& participant : channelState.getParticipants()) {
+            auto& user = serverState.getUserByDescriptor(participant);
+            auto& nick = user.getNick();
+            auto isOperator = channelState.isOperator(participant);
+            std::string operatorPrefix = isOperator ? "@" : "";
+            participantsNames.push_back(operatorPrefix + nick);
+        }
+
+        return { "=", channel, utils::join(participantsNames, " ") };
     }
 
     template <>

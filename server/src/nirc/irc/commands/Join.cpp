@@ -34,8 +34,13 @@ namespace nirc::irc::commands {
         }
 
         auto& channelState = serverState.getChannel(channel);
-        channelState.join(userState.getDescriptor());
+        int userDescriptor = userState.getDescriptor();
+        if (channelState.isOn(userDescriptor)) {
+            return;
+        }
 
+        channelState.join(userState.getDescriptor());
+        
         auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
         broadcastRespondent.send(message);
 

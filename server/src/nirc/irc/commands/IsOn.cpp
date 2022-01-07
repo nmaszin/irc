@@ -25,13 +25,7 @@ namespace nirc::irc::commands {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
-        std::vector<std::string> nicks;
-        for (const auto& nick : message.getArguments()) {
-            if (serverState.isOn(nick)) {
-                nicks.push_back(nick);
-            }
-        }
-
-        privateRespondent.send<Response::RPL_ISON>(&nicks);
+        const auto& nicksToCheck = message.getArguments();
+        privateRespondent.send<Response::RPL_ISON>(&serverState, &nicksToCheck);
     }
 }

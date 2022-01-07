@@ -34,10 +34,6 @@ namespace nirc::irc::state {
     }
 
     void ChannelState::join(int userDescriptor) {
-        if (this->isOn(userDescriptor)) {
-            return;
-        }
-
         std::optional<int> channelOperator;
 
         this->mutex.lock();

@@ -21,7 +21,6 @@ namespace nirc::irc::commands {
         using responses::Response;
         auto& serverState = userState.getServerState();
         auto& privateRespondent = userState.getPrivateRespondent();
-        int userDescriptor = userState.getDescriptor();
 
         if (message.getArguments().size() < 2) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
@@ -36,7 +35,7 @@ namespace nirc::irc::commands {
             }
 
             auto& channel = serverState.getChannel(channelName);
-            if (!channel.isOn(userDescriptor)) {
+            if (!channel.isOn(userState.getDescriptor())) {
                 privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channelName);
             }
 
@@ -56,7 +55,7 @@ namespace nirc::irc::commands {
             }
 
             if (plus) {
-                if (!channel.isOperator(userDescriptor)) {
+                if (!channel.isOperator(userState.getDescriptor())) {
                     privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channelName);
                 }
 
@@ -76,7 +75,7 @@ namespace nirc::irc::commands {
                     auto& flag = message.getArguments()[argumentIndex++];
                 }
 
-                auto broadcastRespondent = channel.getBroadcastRespondent(userState);
+                auto broadcastRespondent = channel.getBroadcastRespondent(userState, true);
                 broadcastRespondent.send(message);
             } else {
                 privateRespondent.send<Response::RPL_CHANNELMODEIS>(&channelName);

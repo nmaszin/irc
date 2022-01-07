@@ -31,9 +31,17 @@ namespace nirc::irc::responses {
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_ISON>(
-        std::vector<std::string> *nicks
+        state::ServerState *serverState,
+        const std::vector<std::string> *nicksToCheck
     ) {
-        return { utils::join(*nicks, " ") };
+        std::vector<std::string> nicks;
+        for (const auto& nick : *nicksToCheck) {
+            if (serverState->isOn(nick)) {
+                nicks.push_back(nick);
+            }
+        }
+
+        return { utils::join(nicks, " ") };
     }
 
 

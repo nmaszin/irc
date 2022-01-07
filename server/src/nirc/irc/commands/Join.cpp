@@ -16,28 +16,17 @@ namespace nirc::irc::commands {
     }
 
     void Join::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
+        using responses::Response;
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
-        auto userPrefix = userState.getUserPrefix();
-
+        auto& privateRespondent = userState.getPrivateRespondent();
+        
         if (message.getArguments().size() < 1) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "461",
-                {userState.getNickArgument(), "Not enough parameters"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(std::string("JOIN"));
         }
 
         const auto& channel = message.getArguments()[0];
         if (!state::ChannelState::isChannel(channel)) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "403",
-                {userState.getNickArgument(), "No such channel"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(channel);
         }
 
         if (!serverState.doesChannelExist(channel)) {
@@ -47,22 +36,10 @@ namespace nirc::irc::commands {
         auto& channelState = serverState.getChannel(channel);
         channelState.join(userState.getDescriptor());
 
-        for (auto participantDescriptor : channelState.getParticipants()) {
-            auto& participantSocket = serverState.getUserByDescriptor(participantDescriptor)
-                .getSocket();
-            
-            participantSocket.send(message::OutputIrcMessage(
-                *userPrefix,
-                "JOIN",
-                {channel}
-            ).toString());
-        }
+        auto broadcastRespondent = channelState.getBroadcastRespondent(userState);
+        broadcastRespondent.send(message);
 
-        socket.send(message::OutputIrcMessage(
-            *serverPrefix,
-            "331",
-            {userState.getNickArgument(), channel, "No topic is set"}
-        ).toString());
+        privateRespondent.send<Response::RPL_NOTOPIC>(channel);
 
         std::vector<std::string> participantsNames;
         for (const auto& participant : channelState.getParticipants()) {
@@ -70,17 +47,7 @@ namespace nirc::irc::commands {
             participantsNames.push_back(name);
         }
 
-        std::string participantsString = utils::join(participantsNames, " ");
-        socket.send(message::OutputIrcMessage(
-            *serverPrefix,
-            "353",
-            {userState.getNickArgument(), "=", channel, participantsString}
-        ).toString());
-
-        socket.send(message::OutputIrcMessage(
-            *serverPrefix,
-            "366",
-            {userState.getNickArgument(), channel, "End of /NAMES list"}
-        ).toString());
+        privateRespondent.send<Response::RPL_NAMREPLY>(channel, participantsNames);
+        privateRespondent.send<Response::RPL_ENDOFNAMES>(channel);
     }
 }

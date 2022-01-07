@@ -10,7 +10,7 @@
 #include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/state/StateException.hpp>
-
+#include <nirc/irc/responses/PrivateRespondent.hpp>
 
 namespace nirc::irc::state {
     UserState::UserState(
@@ -20,7 +20,14 @@ namespace nirc::irc::state {
     ) :
         serverState(serverState),
         socket(std::move(socket)),
-        descriptor(descriptor)
+        descriptor(descriptor),
+        privateRespondent(
+            responses::PrivateResponseGenerator(
+                serverState.getServerPrefix(),
+                this->nick
+            ),
+            *this->socket
+        )
     {
     }
 
@@ -182,5 +189,9 @@ namespace nirc::irc::state {
 
     bool UserState::operator!=(const UserState& other) const {
         return !(*this == other);
+    }
+
+    responses::PrivateRespondent& UserState::getPrivateRespondent() {
+        return this->privateRespondent;
     }
 }

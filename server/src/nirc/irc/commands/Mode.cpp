@@ -18,43 +18,26 @@ namespace nirc::irc::commands {
     }
 
     void Mode::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
+        using responses::Response;
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
-        auto userPrefix = userState.getUserPrefix();
+        auto& privateRespondent = userState.getPrivateRespondent();
         int userDescriptor = userState.getDescriptor();
 
         if (message.getArguments().size() < 2) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "461",
-                {userState.getNickArgument(), "MODE :Not enough parameters"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(this->getName());
         }
 
         auto& recipientName = message.getArguments()[0];
         auto& modes = message.getArguments()[1];
         if (state::ChannelState::isChannel(recipientName)) {
             auto& channelName = recipientName;
-
             if (!serverState.doesChannelExist(channelName)) {
-                socket.send(message::OutputIrcMessage(
-                    *serverPrefix,
-                    "403",
-                    {userState.getNickArgument(), channelName, "No such channel"}
-                ).toString());
-                return;
+                privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(channelName);
             }
 
             auto& channel = serverState.getChannel(channelName);
             if (!channel.isOn(userDescriptor)) {
-                socket.send(message::OutputIrcMessage(
-                    *serverPrefix,
-                    "442",
-                    {userState.getNickArgument(), channelName, "You're not on that channel"}
-                ).toString());
-                return;
+                privateRespondent.error<Response::ERR_NOTONCHANNEL>(channelName);
             }
 
             std::optional<bool> plus;
@@ -74,12 +57,7 @@ namespace nirc::irc::commands {
 
             if (plus) {
                 if (!channel.isOperator(userDescriptor)) {
-                    socket.send(message::OutputIrcMessage(
-                        *serverPrefix,
-                        "482",
-                        {userState.getNickArgument(), channelName, "You're not channel operator"}
-                    ).toString());
-                    return;
+                    privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(channelName);
                 }
 
                 auto& args = message.getArguments();
@@ -98,19 +76,10 @@ namespace nirc::irc::commands {
                     auto& flag = message.getArguments()[argumentIndex++];
                 }
 
-                for (auto& participant : channel.getParticipants()) {
-                    socket.send(message::OutputIrcMessage(
-                        *userPrefix,
-                        "MODE",
-                        std::vector<std::string>(args.begin(), args.end())
-                    ).toString());
-                }
+                auto broadcastRespondent = channel.getBroadcastRespondent(userState);
+                broadcastRespondent.send(message);
             } else {
-                socket.send(message::OutputIrcMessage(
-                    *serverPrefix,
-                    "324",
-                    {userState.getNickArgument(), channelName, ":"}
-                ).toString());
+                privateRespondent.send<Response::RPL_CHANNELMODEIS>(channelName);
             }
         }
     }

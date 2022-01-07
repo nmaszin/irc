@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <nirc/cli/Options.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
@@ -9,37 +10,28 @@
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     IsOn::IsOn() :
         Command("ISON")
     {
     }
 
     void IsOn::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
+        auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "461",
-                {userState.getNickArgument(), "Not enough parameters"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(std::string("ISON"));
         }
 
-        std::vector<std::string> response = {};
+        std::vector<std::string> nicks;
         for (const auto& nick : message.getArguments()) {
             if (serverState.isOn(nick)) {
-                response.push_back(nick);
+                nicks.push_back(nick);
             }
         }
 
-        std::string responseString = utils::join(response, " ");
-        socket.send(message::OutputIrcMessage(
-            *serverPrefix,
-            "303",
-            {userState.getNickArgument(), responseString}
-        ).toString());
+        privateRespondent.send<Response::RPL_ISON>(nicks);
     }
 }

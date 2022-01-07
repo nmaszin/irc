@@ -7,6 +7,7 @@
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/network/TcpSocket.hpp>
+#include <nirc/irc/responses/PrivateRespondent.hpp>
 
 namespace nirc::irc::state {
     class ServerState;
@@ -46,6 +47,8 @@ namespace nirc::irc::state {
         bool operator==(const UserState& other) const;
         bool operator!=(const UserState& other) const;
 
+        responses::PrivateRespondent& getPrivateRespondent();
+
     protected:
         friend class ServerState;
 
@@ -53,6 +56,8 @@ namespace nirc::irc::state {
         ServerState& serverState;
         mutable std::mutex mutex;
         std::unique_ptr<network::TcpSocket> socket;
+
+        responses::PrivateRespondent privateRespondent;
 
         std::optional<std::string> nick; // Assign only by setNick to preserve data consistency
         std::optional<std::string> username;

@@ -8,6 +8,7 @@
 #include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/state/ChannelState.hpp>
+#include <nirc/irc/responses/BroadcastRespondent.hpp>
 
 namespace nirc::irc::state {
     ChannelState::ChannelState(ServerState& serverState) :
@@ -98,6 +99,22 @@ namespace nirc::irc::state {
 
     void ChannelState::setTopic(const std::string& topic) {
         this->topic = topic;
+    }
+
+    responses::BroadcastRespondent ChannelState::getBroadcastRespondent(UserState& sender) const {
+        std::lock_guard<std::mutex> guard(this->mutex);
+
+        std::vector<network::TcpSocket*> sockets;
+        for (auto participantDescriptor : this->participants) {
+            auto& user = this->serverState.getUserByDescriptor(participantDescriptor);
+            auto& socket = user.getSocket();
+            sockets.push_back(&socket);
+        }
+
+        return responses::BroadcastRespondent(
+            responses::BroadcastResponseGenerator(sender.getUserPrefix()),
+            std::move(sockets)
+        );
     }
 
     bool ChannelState::isChannel(const std::string& identifier) {

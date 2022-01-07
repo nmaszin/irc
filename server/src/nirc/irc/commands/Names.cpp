@@ -16,9 +16,9 @@ namespace nirc::irc::commands {
     }
 
     void Names::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
+        using responses::Response;
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
+        auto& privateRespondent = userState.getPrivateRespondent();
 
         for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {
             std::vector<std::string> participantsNames;
@@ -28,18 +28,8 @@ namespace nirc::irc::commands {
                 participantsNames.push_back(nick);
             }
 
-            auto participantsNamesString = utils::join(participantsNames, " ");
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "353",
-                {userState.getNickArgument(), channelName, participantsNamesString}
-            ).toString());
-
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "366",
-                {userState.getNickArgument(), "End of /NAMES list"}
-            ).toString());
+            privateRespondent.send<Response::RPL_NAMREPLY>(channelName, participantsNames);
+            privateRespondent.send<Response::RPL_ENDOFNAMES>(channelName);
         }
     }
 }

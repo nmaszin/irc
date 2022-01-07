@@ -75,6 +75,15 @@ add_executable(nirc
 	include/nirc/irc/handler/MessageHandlerException.hpp
 	src/nirc/irc/handler/InputMessageHandler.cpp
 
+	include/nirc/irc/responses/Response.hpp
+	include/nirc/irc/responses/ResponseException.hpp
+	include/nirc/irc/responses/PrivateRespondent.hpp
+	include/nirc/irc/responses/PrivateResponseGenerator.hpp
+	include/nirc/irc/responses/BroadcastRespondent.hpp
+	include/nirc/irc/responses/BroadcastResponseGenerator.hpp
+	src/nirc/irc/responses/PrivateResponseGenerator.cpp
+	src/nirc/irc/responses/BroadcastResponseGenerator.cpp
+
 	include/nirc/utils/string.hpp
 	include/nirc/utils/Serializable.hpp
 	src/nirc/utils/string.cpp

@@ -15,51 +15,23 @@ namespace nirc::irc::commands {
     }
 
     void Part::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
+        using responses::Response;
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
+        auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "461",
-                {userState.getNickArgument(), "Not enough parameters"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(this->getName());
         }
 
         const auto& channel = message.getArguments()[0];
-        if (!state::ChannelState::isChannel(channel)) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "403",
-                {userState.getNickArgument(), "No such channel"}
-            ).toString());
-            return;
-        }
-
-        if (!serverState.doesChannelExist(channel)) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "403",
-                {userState.getNickArgument(), "No such channel"}
-            ).toString());
-            return;
+        if (!state::ChannelState::isChannel(channel) || !serverState.doesChannelExist(channel)) {
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(channel);
         }
 
         auto& channelState = serverState.getChannel(channel);
         channelState.leave(userState.getDescriptor());
 
-        auto userPrefix = userState.getUserPrefix();
-        for (auto participantDescriptor : channelState.getParticipants()) {
-            auto& participantSocket = serverState.getUserByDescriptor(participantDescriptor)
-                .getSocket();
-
-            participantSocket.send(message::OutputIrcMessage(
-                *userPrefix,
-                "JOIN",
-                {channel}
-            ).toString());
-        }
+        auto broadcastRespondent = channelState.getBroadcastRespondent(userState);
+        broadcastRespondent.send(message);
     }
 }

@@ -16,74 +16,40 @@ namespace nirc::irc::commands {
     }
 
     void Topic::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
+        using responses::Response;
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
+        auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "461",
-                {userState.getNickArgument(), "Not enough parameters"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(this->getName());
         }
 
         const auto& channel = message.getArguments()[0];
         if (!serverState.doesChannelExist(channel)) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "403",
-                {userState.getNickArgument(), channel, "No such channel"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(channel);
         }
 
         auto& channelState = serverState.getChannel(channel);
-
         if (message.getArguments().size() < 2) {
             const auto& topic = channelState.getTopic();
             if (topic) {
-                socket.send(message::OutputIrcMessage(
-                    *serverPrefix,
-                    "332",
-                    {userState.getNickArgument(), channel, *topic}
-                ).toString());
-                return;
+                privateRespondent.send<Response::RPL_TOPIC>(channel, *topic);
             } else {
-                socket.send(message::OutputIrcMessage(
-                    *serverPrefix,
-                    "331",
-                    {userState.getNickArgument(), channel, "No topic is set"}
-                ).toString());
-                return;
+                privateRespondent.send<Response::RPL_NOTOPIC>(channel);
             }
-        }
 
+            return;
+        }
 
         auto userDescriptor = userState.getDescriptor();
         if (!channelState.isOn(userDescriptor)) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "442",
-                {userState.getNickArgument(), channel, "You're not on that channel"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NOTONCHANNEL>(channel);
         }
 
         const auto& newTopic = message.getArguments()[1];
         channelState.setTopic(newTopic);
 
-        auto userPrefix = userState.getUserPrefix();
-        for (auto participantDescriptor : channelState.getParticipants()) {
-            auto& participantSocket = serverState.getUserByDescriptor(participantDescriptor)
-                .getSocket();
-   
-            participantSocket.send(message::OutputIrcMessage(
-                *userPrefix,
-                "TOPIC",
-                {channel, newTopic}
-            ).toString());
-        }
+        auto broadcastRespondent = channelState.getBroadcastRespondent(userState);
+        broadcastRespondent.send(message);
     }
 }

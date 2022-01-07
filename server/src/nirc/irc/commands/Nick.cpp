@@ -17,9 +17,9 @@ namespace nirc::irc::commands {
     }
 
     void Nick::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
+        using responses::Response;
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
+        auto privateRespondent = userState.getPrivateRespondent();
 
         std::optional<std::unique_ptr<message::Prefix>> userPrefix;
         try {
@@ -29,43 +29,19 @@ namespace nirc::irc::commands {
         }
 
         if (message.getArguments().size() < 1) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "431",
-                {"No nickname given"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NONICKNAMEGIVEN>();
         }
 
         auto nick = message.getArguments()[0];
-
         try {
             userState.setNick(nick);
         } catch (const state::StateException& e) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "433",
-                {userState.getNickArgument(), nick, "Nickname is already in use"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NICKNAMEINUSE>(nick);
         }
 
         if (userPrefix) {
-            try {
-                for (const auto& userPtr : serverState.getUsers()) {
-                    if (userPtr) {
-                        auto& userSocket = userPtr->getSocket();
-                    
-                        userSocket.send(message::OutputIrcMessage(
-                            **userPrefix,
-                            "NICK",
-                            {nick}
-                        ).toString());
-                    }
-                }
-            } catch (const state::StateException& e) {
-                // Nevermind ;)
-            }   
+            auto broadcastRespondent = serverState.getBroadcastRespondent(userState);
+            broadcastRespondent.send(message);
         }
     }
 }

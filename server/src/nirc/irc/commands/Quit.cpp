@@ -17,9 +17,10 @@ namespace nirc::irc::commands {
     }
 
     void Quit::handle(state::UserState& userState, const message::InputIrcMessage& message) {
+        using responses::Response;
+
         auto& socket = userState.getSocket();
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
 
         std::optional<std::string> quitMessage;
         const auto& arguments = message.getArguments();
@@ -27,18 +28,8 @@ namespace nirc::irc::commands {
             quitMessage = arguments[0];
         }
 
-        auto userPrefix = userState.getUserPrefix();
-        for (const auto& userPtr : serverState.getUsers()) {
-            if (userPtr) {
-                auto& userSocket = userPtr->getSocket();
-                userSocket.send(message::OutputIrcMessage(
-                    *userPrefix,
-                    "QUIT",
-                    std::vector<std::string>(arguments.begin(), arguments.end())
-                ).toString());
-            }
-        }
-
+        auto broadcastResponse = serverState.getBroadcastRespondent(userState);
+        broadcastResponse.send(message);
         socket.close();
     }
 }

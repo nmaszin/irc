@@ -9,10 +9,12 @@
 #include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/state/ChannelState.hpp>
 #include <nirc/irc/state/StateException.hpp>
+#include <nirc/irc/responses/BroadcastRespondent.hpp>
 
 namespace nirc::irc::state {
     ServerState::ServerState(const cli::Options& options) :
         options(options),
+        prefix(this->options.getHostname()),
         users(options.getMaxClientsNumber())
     {}
 
@@ -57,10 +59,8 @@ namespace nirc::irc::state {
         return this->options;
     }
 
-    std::unique_ptr<message::Prefix> ServerState::getServerPrefix() {
-        return std::make_unique<message::ServerPrefix>(
-            this->options.getHostname()
-        );
+    const message::Prefix& ServerState::getServerPrefix() const {
+        return this->prefix;
     }
 
     std::vector<std::unique_ptr<UserState>>& ServerState::getUsers() {
@@ -97,5 +97,21 @@ namespace nirc::irc::state {
 
         std::lock_guard<std::mutex> guard(this->channelsMutex);
         this->channels[name] = std::make_unique<ChannelState>(*this);
+    }
+
+    responses::BroadcastRespondent ServerState::getBroadcastRespondent(UserState& sender) const {
+        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
+
+        std::vector<network::TcpSocket*> sockets;
+        for (const auto& userPtr : this->users) {
+            if (userPtr) {
+                sockets.push_back(&userPtr->getSocket());
+            }
+        }
+
+        return responses::BroadcastRespondent(
+            responses::BroadcastResponseGenerator(sender.getUserPrefix()),
+            std::move(sockets)
+        );
     }
 }

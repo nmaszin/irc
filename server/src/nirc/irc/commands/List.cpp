@@ -16,33 +16,15 @@ namespace nirc::irc::commands {
     }
 
     void List::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
+        using responses::Response;
+
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
+        auto& privateRespondent = userState.getPrivateRespondent();
 
-        socket.send(message::OutputIrcMessage(
-            *serverPrefix,
-            "321",
-            {userState.getNickArgument(), "Channel :Users Name"}
-        ).toString());
-
+        privateRespondent.send<Response::RPL_LISTSTART>();
         for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {
-            auto usersCount = channelStatePtr->getParticipants().size();
-            auto usersCountString = std::to_string(usersCount);
-            const auto& topic = channelStatePtr->getTopic();
-            auto topicString = topic ? *topic : "";
-
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "322",
-                {userState.getNickArgument(), channelName, usersCountString, topicString}
-            ).toString());
+            privateRespondent.send<Response::RPL_LIST>(channelName, channelStatePtr.get());
         }
-
-        socket.send(message::OutputIrcMessage(
-            *serverPrefix,
-            "323",
-            {userState.getNickArgument(), "End of /LIST"}
-        ).toString());
+        privateRespondent.send<Response::RPL_LISTEND>();
     }
 }

@@ -16,24 +16,14 @@ namespace nirc::irc::commands {
     }
 
     void PrivMsg::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
+        using responses::Response;
         auto& serverState = userState.getServerState();
-        auto serverPrefix = serverState.getServerPrefix();
+        auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "411",
-                {userState.getNickArgument(), "No recipient given (PRIVMSG)"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NORECIPIENT>(this->getName());
         } else if (message.getArguments().size() < 2) {
-            socket.send(message::OutputIrcMessage(
-                *serverPrefix,
-                "412",
-                {userState.getNickArgument(), "No text to send"}
-            ).toString());
-            return;
+            privateRespondent.error<Response::ERR_NOTEXTTOSEND>();
         }
 
         const auto& recipient = message.getArguments()[0];
@@ -41,44 +31,21 @@ namespace nirc::irc::commands {
 
         if (state::ChannelState::isChannel(recipient)) {
             if (!serverState.doesChannelExist(recipient)) {
-                socket.send(message::OutputIrcMessage(
-                    *serverPrefix,
-                    "401",
-                    {userState.getNickArgument(), recipient, "No such nick/channel"}
-                ).toString());
-                return;
+                privateRespondent.error<Response::ERR_NOSUCHNICK>(recipient);
             }
 
-            auto senderDescriptor = userState.getDescriptor();
             auto& channelState = serverState.getChannel(recipient);
-            auto userPrefix = userState.getUserPrefix();
-            for (const auto& participantDescriptor : channelState.getParticipants()) {
-                if (senderDescriptor != participantDescriptor) {
-                    auto& recipientState = serverState.getUserByDescriptor(participantDescriptor);
-                    auto& socket = recipientState.getSocket();
-
-                    socket.send(message::OutputIrcMessage(
-                        *userPrefix,
-                        "PRIVMSG",
-                        {recipient, text}
-                    ).toString());
-                }
-            }
+            auto broadcastRespondent = channelState.getBroadcastRespondent(userState);
+            broadcastRespondent.send(message);
         } else {
             if (!serverState.isOn(recipient)) {
-                socket.send(message::OutputIrcMessage(
-                    *serverPrefix,
-                    "401",
-                    {userState.getNickArgument(), recipient, "No such nick/channel"}
-                ).toString());
-                return;
+                privateRespondent.error<Response::ERR_NOSUCHNICK>(recipient);
             }
 
             auto descriptor = serverState.getUserDescriptorByNick(recipient);
             auto& recipientState = serverState.getUserByDescriptor(descriptor);
             auto& socket = recipientState.getSocket();
             auto prefix = userState.getUserPrefix();
-
             socket.send(message::OutputIrcMessage(
                 *prefix,
                 "PRIVMSG",

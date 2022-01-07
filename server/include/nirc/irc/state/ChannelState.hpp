@@ -7,6 +7,7 @@
 #include <mutex>
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/irc/state/UserState.hpp>
+#include <nirc/irc/responses/BroadcastRespondent.hpp>
 
 namespace nirc::irc::state {
     class ChannelState {
@@ -24,6 +25,8 @@ namespace nirc::irc::state {
 
         const std::optional<std::string>& getTopic() const;
         void setTopic(const std::string& topic);
+
+        responses::BroadcastRespondent getBroadcastRespondent(UserState& sender) const;
 
         static bool isChannel(const std::string& identifier);
 

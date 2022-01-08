@@ -49,7 +49,13 @@ namespace nirc::irc::commands {
         auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
         broadcastRespondent.send(message);
 
-        privateRespondent.send<Response::RPL_NOTOPIC>(&channel);
+        const auto& topic = channelState.getTopic();
+        if (topic) {
+            privateRespondent.send<Response::RPL_TOPIC>(&channel, &*topic);
+        } else {
+            privateRespondent.send<Response::RPL_NOTOPIC>(&channel);
+        }
+
         privateRespondent.send<Response::RPL_NAMREPLY>(&channel, &serverState, &channelState);
         privateRespondent.send<Response::RPL_ENDOFNAMES>(&channel);
     }

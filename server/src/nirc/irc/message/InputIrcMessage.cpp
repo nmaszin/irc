@@ -1,12 +1,14 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <iostream>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/MessageParsingException.hpp>
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::message {
     InputIrcMessage::InputIrcMessage(const std::string& message) {
+        std::cout << message << std::flush;
         auto parts = split_message(message);
         if (parts.size() == 0) {
             throw MessageParsingException("Empty message");

@@ -48,6 +48,10 @@ namespace nirc::irc {
 		state::UserState *userState;
 		try {
 			userState = &this->serverState.addUser(std::move(socket));
+
+			auto& privateRespondent = userState->getPrivateRespondent();
+			privateRespondent.send<responses::Response::ERR_NOMOTD>();
+
 			while (true) {
 				this->handleMessage(*userState);
 			}

@@ -170,6 +170,12 @@ namespace nirc::irc::responses {
 
 
     template <>
+    std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_NOMOTD>() {
+        return { "MOTD File is missing" };
+    }
+
+
+    template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_NONICKNAMEGIVEN>() {
         return { "No nickname given" };
     }

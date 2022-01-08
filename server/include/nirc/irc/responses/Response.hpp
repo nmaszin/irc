@@ -19,6 +19,7 @@ namespace nirc::irc::responses {
         ERR_NORECIPIENT = 411,
         ERR_NOTEXTTOSEND = 412,
         ERR_UNKNOWNCOMMAND = 421,
+        ERR_NOMOTD = 422,
         ERR_NONICKNAMEGIVEN = 431,
         ERR_NICKNAMEINUSE = 433,
         ERR_NOTONCHANNEL = 442,

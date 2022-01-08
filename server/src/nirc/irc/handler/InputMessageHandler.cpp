@@ -13,9 +13,7 @@ namespace nirc::irc::handler {
     InputMessageHandler::InputMessageHandler(std::vector<std::unique_ptr<commands::Command>>&& supportedCommands)
     {
         for (auto&& e : supportedCommands) {
-            auto name = e->getName();
-            std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-
+            const auto& name = e->getName();
             if (this->mapping.find(name) != this->mapping.end()) {
                 throw MessageHandlerException("Handler for this command already exists");
             }
@@ -26,14 +24,12 @@ namespace nirc::irc::handler {
 
     void InputMessageHandler::handle(state::UserState& userState, message::InputIrcMessage& message) {
         try {
-            auto name = message.getCommand();
-            std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-            auto& command = this->mapping.at(name);
+            auto& command = this->mapping.at(message.getCommand());
             command->handle(userState, message);
         } catch (const std::out_of_range&) {
             using responses::Response;
             auto& privateRespondent = userState.getPrivateRespondent();
-            //privateRespondent.error<Response::ERR_UNKNOWNCOMMAND>(message.getCommand());
+            privateRespondent.error<Response::ERR_UNKNOWNCOMMAND>(&message.getCommand());
         }
     }
 }

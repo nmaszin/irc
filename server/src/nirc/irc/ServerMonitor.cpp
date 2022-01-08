@@ -13,25 +13,10 @@ namespace nirc::irc {
     {}
 
     void ServerMonitor::operator()() {
-        while (true) {
-            std::cout << "Available users:\n";
-            int i = 1;
-            for (const auto& e : this->serverState.getUsers()) {
-                if (e) {
-                    auto& user = *e;
-                    try {
-                        const auto& nick = user.getNick();
-                        std::cout << i << ". " << nick << "\n";
-                    } catch (const state::StateException& e) {
-                        std::cout << i << ". " << "user uninitialized" << "\n";
-                    }
-                    
-                    i++;
-                }
-            }
+        using namespace std::chrono;
 
-            using namespace std::chrono;
-            std::this_thread::sleep_for(5s);
+        while (true) {
+            std::this_thread::sleep_for(1s);
         }
     }
 }

@@ -59,6 +59,9 @@ add_executable(nirc
 	include/nirc/irc/commands/Names.hpp
 	include/nirc/irc/commands/Mode.hpp
 	include/nirc/irc/commands/Kick.hpp
+	include/nirc/irc/commands/Cap.hpp
+	include/nirc/irc/commands/Ping.hpp
+	include/nirc/irc/commands/Pong.hpp
 	src/nirc/irc/commands/Command.cpp
 	src/nirc/irc/commands/Join.cpp
 	src/nirc/irc/commands/Nick.cpp
@@ -72,6 +75,9 @@ add_executable(nirc
 	src/nirc/irc/commands/Names.cpp
 	src/nirc/irc/commands/Mode.cpp
 	src/nirc/irc/commands/Kick.cpp
+	src/nirc/irc/commands/Cap.cpp
+	src/nirc/irc/commands/Ping.cpp
+	src/nirc/irc/commands/Pong.cpp
 
 	include/nirc/irc/handler/InputMessageHandler.hpp
 	include/nirc/irc/handler/MessageHandlerException.hpp

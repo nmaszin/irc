@@ -8,12 +8,12 @@
 #include <mutex>
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/irc/state/UserState.hpp>
+#include <nirc/irc/state/ServerState.hpp>
 #include <nirc/irc/responses/BroadcastRespondent.hpp>
 
 namespace nirc::irc::state {
     class ChannelState {
     public:
-        friend class ServerState;
         friend class ChannelStateOperator;
         friend class ChannelBroadcastRespondentOperator;
 

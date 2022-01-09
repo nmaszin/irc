@@ -9,18 +9,16 @@
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/network/TcpSocket.hpp>
 #include <nirc/irc/responses/PrivateRespondent.hpp>
+#include <nirc/irc/state/ChannelState.hpp>
+#include <nirc/irc/state/ServerState.hpp>
 
 namespace nirc::irc::state {
-    class UserState;
-    class ChannelState;
-    class ServerState;
-
     class UserState {
     public:
-        friend class ServerState;
         friend class UserStateOperator;
         friend class ServerBroadcastRespondentOperator;
         friend class ChannelBroadcastRespondentOperator;
+        friend class NickSetOperator;
 
         ServerState& getServerState();
         network::TcpSocket& getSocket();

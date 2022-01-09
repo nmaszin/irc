@@ -62,6 +62,7 @@ add_executable(nirc
 	include/nirc/irc/commands/Cap.hpp
 	include/nirc/irc/commands/Ping.hpp
 	include/nirc/irc/commands/Pong.hpp
+	include/nirc/irc/commands/Who.hpp
 	src/nirc/irc/commands/Command.cpp
 	src/nirc/irc/commands/Join.cpp
 	src/nirc/irc/commands/Nick.cpp
@@ -78,6 +79,7 @@ add_executable(nirc
 	src/nirc/irc/commands/Cap.cpp
 	src/nirc/irc/commands/Ping.cpp
 	src/nirc/irc/commands/Pong.cpp
+	src/nirc/irc/commands/Who.cpp
 
 	include/nirc/irc/handler/InputMessageHandler.hpp
 	include/nirc/irc/handler/MessageHandlerException.hpp

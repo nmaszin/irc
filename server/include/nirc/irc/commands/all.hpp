@@ -18,6 +18,7 @@
 #include <nirc/irc/commands/Cap.hpp>
 #include <nirc/irc/commands/Ping.hpp>
 #include <nirc/irc/commands/Pong.hpp>
+#include <nirc/irc/commands/Who.hpp>
 
 namespace nirc::irc::commands {
     std::vector<std::unique_ptr<commands::Command>> all() {
@@ -37,6 +38,7 @@ namespace nirc::irc::commands {
         result.push_back(std::make_unique<Cap>());
         result.push_back(std::make_unique<Ping>());
         result.push_back(std::make_unique<Pong>());
+        result.push_back(std::make_unique<Who>());
         return result;
     }
 }

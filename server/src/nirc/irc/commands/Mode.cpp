@@ -22,6 +22,12 @@ namespace nirc::irc::commands {
         auto& serverState = userState.getServerState();
         auto& privateRespondent = userState.getPrivateRespondent();
 
+        // Temporary fix
+        if (message.getArguments().size() == 1) {
+            return;
+        }
+        //Temporary fix end
+
         if (message.getArguments().size() < 2) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }

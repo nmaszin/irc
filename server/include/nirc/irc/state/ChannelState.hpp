@@ -15,6 +15,7 @@ namespace nirc::irc::state {
     public:
         friend class ServerState;
         friend class ChannelStateOperator;
+        friend class ChannelBroadcastRespondentOperator;
 
         ServerState& getServerState();
         static bool isChannel(const std::string& identifier);
@@ -38,31 +39,5 @@ namespace nirc::irc::state {
 
         std::vector<std::string> bans;
         std::optional<std::string> topic;
-    };
-
-    class ChannelStateOperator {
-    protected:
-        ChannelStateOperator(ChannelState& state);
-
-        bool isOn(UserState& user);
-        void join(UserState& user);
-        void leave(UserState& user);
-        const std::list<UserState*>& getParticipants();
-
-        bool isOperator(UserState& user);
-        void promoteToOperator(UserState& user);
-        void degradeFromOperator(UserState& user);
-
-        bool isBanned(UserState& user);
-        void ban(const std::string& mask);
-        void unban(const std::string& mask);
-
-        const std::optional<std::string>& getTopic();
-        void setTopic(const std::string& topic);
-
-        responses::BroadcastRespondent getBroadcastRespondent(UserState& sender, bool includeYourself=false);
-
-        ChannelState& state;
-        std::shared_mutex& channelStateMutex;
     };
 }

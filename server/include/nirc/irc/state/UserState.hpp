@@ -19,6 +19,8 @@ namespace nirc::irc::state {
     public:
         friend class ServerState;
         friend class UserStateOperator;
+        friend class ServerBroadcastRespondentOperator;
+        friend class ChannelBroadcastRespondentOperator;
 
         ServerState& getServerState();
         network::TcpSocket& getSocket();
@@ -46,30 +48,5 @@ namespace nirc::irc::state {
         std::optional<std::string> realname;
 
         std::vector<ChannelState*> channels;
-    };
-
-    class UserStateOperator {
-    protected:
-        UserStateOperator(UserState& state);
-
-        std::unique_ptr<message::Prefix> getUserPrefix();
-
-        void setNick(std::string&& nick);
-        const std::string& getNick();
-
-        void setUsername(std::string&& nick);
-        const std::string& getUsername();
-
-        void setHostname(std::string&& nick);
-        const std::string& getHostname();
-
-        void setServername(std::string&& nick);
-        const std::string& getServername();
-
-        void setRealname(std::string&& nick);
-        const std::string& getRealname();
-
-        UserState& state;
-        std::shared_mutex& userStateMutex;
     };
 }

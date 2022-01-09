@@ -17,6 +17,7 @@ namespace nirc::irc::state {
     class ServerState {
     public: 
         friend class ServerStateOperator;
+        friend class ServerBroadcastRespondentOperator;
 
         ServerState(const cli::Options& options);
         const cli::Options& getOptions() const;
@@ -37,36 +38,6 @@ namespace nirc::irc::state {
         std::list<std::unique_ptr<ChannelState>> channels;
         std::unordered_map<std::string, ChannelState*> channelsNames;
     };
-
-    class ServerStateOperator {
-    protected:
-        ServerStateOperator(ServerState& state);
-
-        UserState& addUser(std::unique_ptr<network::TcpSocket>&& socket);
-        void deleteUser(UserState& state);
-        const std::list<std::unique_ptr<UserState>>& getUsers();
-
-        bool isOn(const std::string& nick);
-        const std::unordered_map<std::string, UserState*>& getUserNicks();
-        void setUserNick(UserState& user, std::string&& nick);
-        UserState& getUserByNick(const std::string& nick);
-
-        bool doesChannelExist(const std::string& name);
-        ChannelState& getChannel(const std::string& name);
-        const std::list<std::unique_ptr<ChannelState>>& getChannels();
-        const std::unordered_map<std::string, ChannelState*>& getChannelsNames();
-
-        ChannelState& addChannel(std::string&& name);
-        void deleteChannel(ChannelState& channelState);
-
-        responses::BroadcastRespondent getBroadcastRespondent(UserState& sender, bool includeYourself=false) const;
-
-        ServerState& state;
-        std::shared_mutex& nicksMutex;
-        std::shared_mutex& usersMutex;
-        std::shared_mutex& channelsMutex;
-    };
-
 
     /*class ServerStateNicksReadView : public ServerStateOperator {
     public:

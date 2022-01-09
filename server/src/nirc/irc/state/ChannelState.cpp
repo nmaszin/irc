@@ -11,88 +11,86 @@
 #include <nirc/irc/responses/BroadcastRespondent.hpp>
 
 namespace nirc::irc::state {
-    ChannelState::ChannelState(ServerState& serverState) :
-        serverState(serverState)
+    ChannelState(
+        ServerState& serverState,
+        std::string&& name,
+        std::list<std::unique_ptr<ChannelState>>::iterator iterator
+    ) :
+        serverState(serverState),
+        name(std::move(name)),
+        iterator(iterator)
+    {}
+
+    ServerState& ChannelState::getServerState() {
+       return this->serverState; 
+    }
+
+    bool ChannelState::isChannel(const std::string& identifier) {
+        return identifier[0] == '#';
+    }
+
+    ChannelStateOperator::ChannelStateOperator(ChannelState& state) :
+        state(state),
+        mutex(state.mutex)
     {
     }
 
-    const std::vector<int>& ChannelState::getParticipants() const {
-        std::lock_guard<std::mutex> guard(this->mutex);
-        return this->participants;
-    }
-
-    bool ChannelState::isOn(int userDescriptor) const {
-        std::lock_guard<std::mutex> guard(this->mutex);
-        auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
+    bool ChannelStateOperator::isOn(UserState& user) {
         auto it = std::find(
-            this->participants.begin(),
-            this->participants.end(),
-            userDescriptor
+            state.participants.begin(),
+            state.participants.end(),
+            &user
         );
 
-        return it != this->participants.end();
+        return it != state.participants.end();
     }
 
-    void ChannelState::join(int userDescriptor) {
-        std::optional<int> channelOperator;
-
-        this->mutex.lock();
-        this->participants.push_back(userDescriptor);
-        if (this->participants.size() == 1) {
-            channelOperator = this->participants[0];
+    void ChannelStateOperator::join(UserState& user) {
+        state.participants.push_back(&user);
+        if (state.participants.size() == 1) {
+            this->promoteToOperator(user);
         }
-        this->mutex.unlock();
-
-        if (channelOperator) {
-            this->promoteToOperator(*channelOperator);
-        }
-
-        const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
     }
 
-    void ChannelState::leave(int userDescriptor) {
-        if (!this->isOn(userDescriptor)) {
+    void ChannelStateOperator::leave(UserState& user) {
+        auto it = std::find(state.participants.begin(), state.participants.end(), &user);
+        if (it == state.participants.end()) {
             throw StateException("User has not joined to channel");
         }
 
-        std::lock_guard<std::mutex> guard(this->mutex);
-        auto it = std::find(this->participants.begin(), this->participants.end(), userDescriptor);
-        if (it == this->participants.end()) {
-            // Not necessary in theory but I add this check to prevent from data inconsistency
-            throw StateException("User has not joined to channel");
+        state.participants.erase(it);
+    }
+
+    const std::list<UserState*>& ChannelStateOperator::getParticipants() {
+        return state.participants;
+    }
+
+    bool ChannelStateOperator::isOperator(UserState& user) {
+        auto it = std::find(state.operators.begin(), state.operators.end(), &user);
+        return it != state.operators.end();
+    }
+
+    void ChannelStateOperator::promoteToOperator(UserState& user) {
+        if (this->isOperator(user)) {
+            throw StateException("User is already operator");
         }
 
-        this->participants.erase(it);
-        const auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
+        state.operators.push_back(&user);
     }
 
-    bool ChannelState::isOperator(int userDescriptor) const {
-        std::lock_guard<std::mutex> guard(this->mutex);
-        auto it = std::find(this->operators.begin(), this->operators.end(), userDescriptor);
-        return it != this->operators.end();
-    }
-
-    void ChannelState::promoteToOperator(int userDescriptor) {
-        if (this->isOperator(userDescriptor)) {
-            return;
+    void ChannelStateOperator::degradeFromOperator(UserState& user) {
+        auto it = std::find(state.operators.begin(), state.operators.end(), &user);
+        if (it == state.operators.end()) {
+            throw StateException("User is not an operator");
         }
 
-        std::lock_guard<std::mutex> guard(this->mutex);
-        this->operators.push_back(userDescriptor);
+        state.operators.erase(it);
     }
 
-    void ChannelState::degradeFromOperator(int userDescriptor) {
-        std::lock_guard<std::mutex> guard(this->mutex);
-        auto it = std::find(this->operators.begin(), this->operators.end(), userDescriptor);
-        if (it != this->operators.end()) {
-            this->operators.erase(it);
-        }
-    }
-
-    bool ChannelState::isBanned(UserState& userState) const {
-        for (const auto& mask : this->bans) {
+    bool ChannelStateOperator::isBanned(UserState& user) {
+        for (const auto& mask : state.bans) {
             auto prefix = message::UserPrefix::fromString(mask);
-            if (prefix.getNick() != "*" && prefix.getNick() != userState.getNick()) {
+            if (prefix.getNick() != "*" && prefix.getNick() != user.getNick()) {
                 continue;
             }
 
@@ -116,38 +114,38 @@ namespace nirc::irc::state {
         return false;
     }
 
-    void ChannelState::ban(const std::string& mask) {
-        if (std::find(this->bans.begin(), this->bans.end(), mask) != this->bans.end()) {
-            return;
+
+    void ChannelStateOperator::ban(const std::string& mask) {
+        auto it = std::find(state.bans.begin(), state.bans.end(), mask);
+        if (it != state.bans.end()) {
+            throw StateException("Already banned");
         }
 
-        this->bans.push_back(mask);
+        state.bans.push_back(mask);
     }
 
-    void ChannelState::unban(const std::string& mask) {
-        auto it = std::find(this->bans.begin(), this->bans.end(), mask);
-        if (it != this->bans.end()) {
-            bans.erase(it);
+    void ChannelStateOperator::unban(const std::string& mask) {
+        auto it = std::find(state.bans.begin(), state.bans.end(), mask);
+        if (it == state.bans.end()) {
+            throw StateException("Not banned");
         }
+
+        state.bans.erase(it);
     }
 
-    const std::optional<std::string>& ChannelState::getTopic() const {
+    const std::optional<std::string>& ChannelStateOperator::getTopic() {
         return this->topic;
     }
 
-    void ChannelState::setTopic(const std::string& topic) {
-        this->topic = topic;
+    void ChannelStateOperator::setTopic(std::string&& topic) {
+        this->topic = std::move(topic);
     }
 
-    responses::BroadcastRespondent ChannelState::getBroadcastRespondent(UserState& sender, bool includeYourself) const {
-        std::lock_guard<std::mutex> guard(this->mutex);
-
-        std::vector<network::TcpSocket*> sockets;
-        for (auto participantDescriptor : this->participants) {
-            if (includeYourself || participantDescriptor != sender.getDescriptor()) {
-                auto& user = this->serverState.getUserByDescriptor(participantDescriptor);
-                auto& socket = user.getSocket();
-                sockets.push_back(&socket);
+    responses::BroadcastRespondent ChannelStateOperator::getBroadcastRespondent(UserState& sender, bool includeYourself=false) {
+        std::list<network::TcpSocket*> sockets;
+        for (auto participant : this->participants) {
+            if (includeYourself || &participant != &sender) {
+                sockets.push_back(&participant.getSocket());
             }
         }
 
@@ -155,9 +153,5 @@ namespace nirc::irc::state {
             responses::BroadcastResponseGenerator(sender.getUserPrefix()),
             std::move(sockets)
         );
-    }
-
-    bool ChannelState::isChannel(const std::string& identifier) {
-        return identifier[0] == '#';
     }
 }

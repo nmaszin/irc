@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <optional>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/StateException.hpp>
@@ -10,61 +11,65 @@
 #include <nirc/irc/responses/PrivateRespondent.hpp>
 
 namespace nirc::irc::state {
+    class UserState;
+    class ChannelState;
     class ServerState;
 
     class UserState {
     public:
-        UserState(
-            ServerState& serverState,
-            std::unique_ptr<network::TcpSocket>&& socket,
-            int descriptor
-        );
+        friend class ServerState;
+        friend class UserStateOperator;
 
-        ~UserState();
-
-        void setNick(const std::string& nick);
-        const std::string& getNick() const;
-        std::string getNickArgument() const;
-
-        void setUsername(const std::string& nick);
-        const std::string& getUsername() const;
-
-        void setHostname(const std::string& nick);
-        const std::string& getHostname() const;
-
-        void setServername(const std::string& nick);
-        const std::string& getServername() const;
-
-        void setRealname(const std::string& nick);
-        const std::string& getRealname() const;
-
-        std::mutex& getMutex();
-        network::TcpSocket& getSocket();
         ServerState& getServerState();
-        int getDescriptor() const;
-        std::unique_ptr<message::Prefix> getUserPrefix() const;
-
-        bool operator==(const UserState& other) const;
-        bool operator!=(const UserState& other) const;
-
+        network::TcpSocket& getSocket();
         responses::PrivateRespondent& getPrivateRespondent();
 
     protected:
-        friend class ServerState;
+        UserState(
+            ServerState& serverState,
+            std::unique_ptr<network::TcpSocket>&& socket,
+            std::list<std::unique_ptr<UserState>>::iterator iterator
+        );
 
-        int descriptor;
+        mutable std::shared_mutex mutex;
+
+    private:
         ServerState& serverState;
-        mutable std::mutex mutex;
         std::unique_ptr<network::TcpSocket> socket;
-
+        std::list<std::unique_ptr<UserState>>::iterator iterator;
         responses::PrivateRespondent privateRespondent;
-
-        std::optional<std::string> nick; // Assign only by setNick to preserve data consistency
+        
+        std::optional<std::string> nick;
         std::optional<std::string> username;
         std::optional<std::string> hostname;
         std::optional<std::string> servername;
         std::optional<std::string> realname;
 
-        std::vector<std::string> channels;
+        std::vector<ChannelState*> channels;
+    };
+
+    class UserStateOperator {
+    protected:
+        UserStateOperator(UserState& state);
+
+        std::unique_ptr<message::Prefix> getUserPrefix();
+
+        void setNick(std::string&& nick);
+        const std::string& getNick();
+
+        void setUsername(std::string&& nick);
+        const std::string& getUsername();
+
+        void setHostname(std::string&& nick);
+        const std::string& getHostname();
+
+        void setServername(std::string&& nick);
+        const std::string& getServername();
+
+        void setRealname(std::string&& nick);
+        const std::string& getRealname();
+
+        UserState& state;
+        std::shared_mutex& userStateMutex;
     };
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <string>
 #include <memory>
 #include <mutex>
@@ -9,31 +10,44 @@
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/network/TcpSocket.hpp>
 #include <nirc/irc/responses/PrivateRespondent.hpp>
-#include <nirc/irc/state/ChannelState.hpp>
-#include <nirc/irc/state/ServerState.hpp>
 
 namespace nirc::irc::state {
+    class ServerState;
+    class ChannelState;
+    class UserState;
+
     class UserState {
     public:
-        friend class UserStateOperator;
-        friend class ServerBroadcastRespondentOperator;
-        friend class ChannelBroadcastRespondentOperator;
-        friend class NickSetOperator;
-
         ServerState& getServerState();
         network::TcpSocket& getSocket();
         responses::PrivateRespondent& getPrivateRespondent();
 
-    protected:
+        std::unique_ptr<message::Prefix> getUserPrefix() const;
+
+        void setNick(const std::string& nick);
+        const std::string& getNick() const;
+
+        void setUsername(const std::string& nick);
+        const std::string& getUsername() const;
+
+        void setHostname(const std::string& nick);
+        const std::string& getHostname() const;
+
+        void setServername(const std::string& nick);
+        const std::string& getServername() const;
+
+        void setRealname(const std::string& nick);
+        const std::string& getRealname() const;
+
+        mutable std::shared_mutex mutex;
+
+    // protected:
         UserState(
             ServerState& serverState,
             std::unique_ptr<network::TcpSocket>&& socket,
             std::list<std::unique_ptr<UserState>>::iterator iterator
         );
 
-        mutable std::shared_mutex mutex;
-
-    private:
         ServerState& serverState;
         std::unique_ptr<network::TcpSocket> socket;
         std::list<std::unique_ptr<UserState>>::iterator iterator;

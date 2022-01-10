@@ -36,7 +36,7 @@ namespace nirc::irc::commands {
         }
 
         auto& channelState = serverState.getChannel(channel);
-        if (!channelState.isOperator(userState.getDescriptor())) {
+        if (!channelState.isOperator(userState)) {
             privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channel);
         }
 
@@ -44,13 +44,13 @@ namespace nirc::irc::commands {
             privateRespondent.error<Response::ERR_NOSUCHNICK>(&nick);
         }
 
-        auto kickedUserDescriptor = serverState.getUserDescriptorByNick(nick);
-        if (!channelState.isOn(kickedUserDescriptor)) {
+        auto& kickedUser = serverState.getUserByNick(nick);
+        if (!channelState.isOn(kickedUser)) {
             privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channel);
         }
 
         auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
         broadcastRespondent.send(message);
-        channelState.leave(kickedUserDescriptor);
+        channelState.leave(kickedUser);
     }
 }

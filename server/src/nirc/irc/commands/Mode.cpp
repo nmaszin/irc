@@ -41,7 +41,7 @@ namespace nirc::irc::commands {
             }
 
             auto& channel = serverState.getChannel(channelName);
-            if (!channel.isOn(userState.getDescriptor())) {
+            if (!channel.isOn(userState)) {
                 privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channelName);
             }
 
@@ -61,7 +61,7 @@ namespace nirc::irc::commands {
             }
 
             if (plus) {
-                if (!channel.isOperator(userState.getDescriptor())) {
+                if (!channel.isOperator(userState)) {
                     privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channelName);
                 }
 
@@ -70,11 +70,11 @@ namespace nirc::irc::commands {
                 int argumentIndex = 2;
                 if (operatorFlag) {
                     auto& nick = message.getArguments()[argumentIndex++];
-                    auto descriptor = serverState.getUserDescriptorByNick(nick);
+                    auto& user = serverState.getUserByNick(nick);
                     if (*operatorFlag) {
-                        channel.promoteToOperator(descriptor);
+                        channel.promoteToOperator(user);
                     } else {
-                        channel.degradeFromOperator(descriptor);
+                        channel.degradeFromOperator(user);
                     }
                 }
                 if (banFlag) {

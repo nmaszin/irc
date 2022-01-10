@@ -6,7 +6,6 @@
 #include <nirc/irc/responses/Response.hpp>
 #include <nirc/irc/responses/ResponseException.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
-#include <nirc/irc/message/Prefix.hpp>
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::responses {

@@ -20,9 +20,8 @@ namespace nirc::irc::commands {
         auto& serverState = userState.getServerState();
         auto& privateRespondent = userState.getPrivateRespondent();
 
-        for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {
-            auto& channelState = *channelStatePtr;
-            privateRespondent.send<Response::RPL_NAMREPLY>(&channelName, &serverState, &channelState);
+        for (const auto& [channelName, channelStatePtr] : serverState.getChannelsNames()) {
+            privateRespondent.send<Response::RPL_NAMREPLY>(&channelName, &serverState, channelStatePtr);
             privateRespondent.send<Response::RPL_ENDOFNAMES>(&channelName);
         }
     }

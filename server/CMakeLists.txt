@@ -45,17 +45,6 @@ add_executable(nirc
 	src/nirc/irc/state/StateException.cpp
 	src/nirc/irc/state/ChannelState.cpp
 
-	include/nirc/irc/state/operators/ServerStateOperator.hpp
-	include/nirc/irc/state/operators/UserStateOperator.hpp
-	include/nirc/irc/state/operators/ChannelStateOperator.hpp
-	include/nirc/irc/state/operators/ChannelBroadcastRespondentOperator.hpp
-	include/nirc/irc/state/operators/ServerBroadcastRespondentOperator.hpp
-	src/nirc/irc/state/operators/ServerStateOperator.cpp
-	src/nirc/irc/state/operators/UserStateOperator.cpp
-	src/nirc/irc/state/operators/ChannelStateOperator.cpp
-	src/nirc/irc/state/operators/ChannelBroadcastRespondentOperator.cpp
-	src/nirc/irc/state/operators/ServerBroadcastRespondentOperator.cpp
-
 	include/nirc/irc/commands/all.hpp
 	include/nirc/irc/commands/Command.hpp
 	include/nirc/irc/commands/Join.hpp

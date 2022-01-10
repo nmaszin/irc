@@ -24,39 +24,38 @@ namespace nirc::irc::commands {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
-        const auto& channel = message.getArguments()[0];
-        if (!state::ChannelState::isChannel(channel)) {
-            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
+        const auto& channelName = message.getArguments()[0];
+        if (!state::ChannelState::isChannel(channelName)) {
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channelName);
         }
 
-        if (serverState.doesChannelExist(channel)) {
-            auto& channelState = serverState.getChannel(channel);
+        if (serverState.doesChannelExist(channelName)) {
+            auto& channelState = serverState.getChannel(channelName);
             if (channelState.isBanned(userState)) {
-                privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&channel);
+                privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&channelName);
             }
         } else {
-            serverState.createChannel(channel);
+            serverState.addChannel(channelName);
         }
 
-        int userDescriptor = userState.getDescriptor();
-        auto& channelState = serverState.getChannel(channel);
-        if (channelState.isOn(userDescriptor)) {
+        auto& channelState = serverState.getChannel(channelName);
+        if (channelState.isOn(userState)) {
             return;
         }
 
-        channelState.join(userState.getDescriptor());
+        channelState.join(userState);
         
         auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
         broadcastRespondent.send(message);
 
         const auto& topic = channelState.getTopic();
         if (topic) {
-            privateRespondent.send<Response::RPL_TOPIC>(&channel, &*topic);
+            privateRespondent.send<Response::RPL_TOPIC>(&channelName, &*topic);
         } else {
-            privateRespondent.send<Response::RPL_NOTOPIC>(&channel);
+            privateRespondent.send<Response::RPL_NOTOPIC>(&channelName);
         }
 
-        privateRespondent.send<Response::RPL_NAMREPLY>(&channel, &serverState, &channelState);
-        privateRespondent.send<Response::RPL_ENDOFNAMES>(&channel);
+        privateRespondent.send<Response::RPL_NAMREPLY>(&channelName, &serverState, &channelState);
+        privateRespondent.send<Response::RPL_ENDOFNAMES>(&channelName);
     }
 }

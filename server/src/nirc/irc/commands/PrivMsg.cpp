@@ -26,30 +26,29 @@ namespace nirc::irc::commands {
             privateRespondent.error<Response::ERR_NOTEXTTOSEND>();
         }
 
-        const auto& recipient = message.getArguments()[0];
+        const auto& recipientName = message.getArguments()[0];
         const auto& text = message.getArguments()[1];
 
-        if (state::ChannelState::isChannel(recipient)) {
-            if (!serverState.doesChannelExist(recipient)) {
-                privateRespondent.error<Response::ERR_NOSUCHNICK>(&recipient);
+        if (state::ChannelState::isChannel(recipientName)) {
+            if (!serverState.doesChannelExist(recipientName)) {
+                privateRespondent.error<Response::ERR_NOSUCHNICK>(&recipientName);
             }
 
-            auto& channelState = serverState.getChannel(recipient);
+            auto& channelState = serverState.getChannel(recipientName);
             auto broadcastRespondent = channelState.getBroadcastRespondent(userState);
             broadcastRespondent.send(message);
         } else {
-            if (!serverState.isOn(recipient)) {
-                privateRespondent.error<Response::ERR_NOSUCHNICK>(&recipient);
+            if (!serverState.isOn(recipientName)) {
+                privateRespondent.error<Response::ERR_NOSUCHNICK>(&recipientName);
             }
 
-            auto descriptor = serverState.getUserDescriptorByNick(recipient);
-            auto& recipientState = serverState.getUserByDescriptor(descriptor);
+            auto& recipientState = serverState.getUserByNick(recipientName);
             auto& socket = recipientState.getSocket();
             auto prefix = userState.getUserPrefix();
             socket.send(message::OutputIrcMessage(
                 *prefix,
                 "PRIVMSG",
-                {recipient, text}
+                {recipientName, text}
             ).toString());
         }
     }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <nirc/irc/responses/Response.hpp>
 #include <nirc/irc/responses/BroadcastResponseGenerator.hpp>
 #include <nirc/irc/responses/ResponseException.hpp>
@@ -11,7 +12,7 @@ namespace nirc::irc::responses {
     public:
         BroadcastRespondent(
             BroadcastResponseGenerator&& generator,
-            std::vector<network::TcpSocket*>&& sockets
+            std::list<network::TcpSocket*>&& sockets
         ) :
             generator(std::move(generator)),
             sockets(sockets)
@@ -31,7 +32,7 @@ namespace nirc::irc::responses {
 
     protected:
         BroadcastResponseGenerator generator;
-        std::vector<network::TcpSocket*> sockets; //change it to prevent nullptr dereferencing
+        std::list<network::TcpSocket*> sockets; //change it to prevent nullptr dereferencing
     };
 }
 

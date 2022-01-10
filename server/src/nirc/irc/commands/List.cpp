@@ -22,8 +22,8 @@ namespace nirc::irc::commands {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         privateRespondent.send<Response::RPL_LISTSTART>();
-        for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {
-            privateRespondent.send<Response::RPL_LIST>(&channelName, channelStatePtr.get());
+        for (const auto& [channelName, channelStatePtr] : serverState.getChannelsNames()) {
+            privateRespondent.send<Response::RPL_LIST>(&channelName, channelStatePtr);
         }
         privateRespondent.send<Response::RPL_LISTEND>();
     }

@@ -15,7 +15,7 @@ namespace nirc::irc::responses {
         const message::Prefix& prefix,
         const std::optional<std::string>& recipientNick
     ) :
-        prefix(std::move(prefix)),
+        prefix(prefix),
         recipientNick(recipientNick)
     {}
 
@@ -104,9 +104,8 @@ namespace nirc::irc::responses {
     ) {
         std::vector<std::string> participantsNames;
         for (const auto& participant : channelState->getParticipants()) {
-            auto& user = serverState->getUserByDescriptor(participant);
-            auto& nick = user.getNick();
-            auto isOperator = channelState->isOperator(participant);
+            auto& nick = participant->getNick();
+            auto isOperator = channelState->isOperator(*participant);
             std::string operatorPrefix = isOperator ? "@" : "";
             participantsNames.push_back(operatorPrefix + nick);
         }

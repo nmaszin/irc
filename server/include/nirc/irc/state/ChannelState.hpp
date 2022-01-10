@@ -10,6 +10,8 @@
 #include <nirc/irc/responses/BroadcastRespondent.hpp>
 
 namespace nirc::irc::state {
+    class ServerState;
+
     class ChannelState {
     public:
         ChannelState(ServerState& serverState);
@@ -34,13 +36,15 @@ namespace nirc::irc::state {
 
         static bool isChannel(const std::string& identifier);
 
+        mutable std::shared_mutex mutex;
+
     protected:
+        friend class ServerState;
+
         ServerState& serverState;
         std::vector<int> participants;
         std::vector<int> operators;
         std::vector<std::string> bans;
-
-        mutable std::mutex mutex;
 
         std::optional<std::string> topic;
     };

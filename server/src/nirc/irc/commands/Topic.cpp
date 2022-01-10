@@ -10,14 +10,14 @@
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     Topic::Topic() :
         Command("TOPIC")
     {
     }
 
-    void Topic::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-        auto& serverState = userState.getServerState();
+    void Topic::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {

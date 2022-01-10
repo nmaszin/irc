@@ -11,16 +11,15 @@
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     Quit::Quit() :
         Command("QUIT")
     {
     }
 
-    void Quit::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-
+    void Quit::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& socket = userState.getSocket();
-        auto& serverState = userState.getServerState();
 
         std::optional<std::string> quitMessage;
         const auto& arguments = message.getArguments();

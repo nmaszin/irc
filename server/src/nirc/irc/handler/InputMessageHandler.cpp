@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cctype>
+#include <mutex>
+#include <shared_mutex>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/commands/Command.hpp>
 #include <nirc/irc/handler/MessageHandlerException.hpp>
@@ -22,10 +24,10 @@ namespace nirc::irc::handler {
         }
     }
 
-    void InputMessageHandler::handle(state::UserState& userState, message::InputIrcMessage& message) {
+    void InputMessageHandler::handle(state::ServerState& serverState, state::UserState& userState, message::InputIrcMessage& message) {
         try {
             auto& command = this->mapping.at(message.getCommand());
-            command->handle(userState, message);
+            command->handle(serverState, userState, message);
         } catch (const std::out_of_range&) {
             using responses::Response;
             auto& privateRespondent = userState.getPrivateRespondent();

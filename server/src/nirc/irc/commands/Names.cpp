@@ -10,14 +10,14 @@
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     Names::Names() :
         Command("NAMES")
     {
     }
 
-    void Names::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-        auto& serverState = userState.getServerState();
+    void Names::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {

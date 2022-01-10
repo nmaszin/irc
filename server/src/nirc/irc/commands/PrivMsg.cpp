@@ -10,14 +10,14 @@
 #include <nirc/irc/state/ChannelState.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     PrivMsg::PrivMsg() :
         Command("PRIVMSG")
     {
     }
 
-    void PrivMsg::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-        auto& serverState = userState.getServerState();
+    void PrivMsg::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {

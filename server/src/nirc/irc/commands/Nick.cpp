@@ -11,14 +11,14 @@
 #include <nirc/irc/state/ServerState.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     Nick::Nick() :
         Command("NICK")
     {
     }
 
-    void Nick::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-        auto& serverState = userState.getServerState();
+    void Nick::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto privateRespondent = userState.getPrivateRespondent();
 
         std::optional<std::unique_ptr<message::Prefix>> userPrefix;

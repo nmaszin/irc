@@ -13,7 +13,7 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Cap::handle(state::UserState& userState, const message::InputIrcMessage& message) {
+    void Cap::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         // Do nothing
     }
 }

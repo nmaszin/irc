@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <mutex>
+#include <shared_mutex>
 #include <nirc/cli/Options.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
 #include <nirc/irc/message/OutputIrcMessage.hpp>
@@ -17,10 +19,9 @@ namespace nirc::irc::commands {
     {
     }
 
-    void IsOn::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& serverState = userState.getServerState();
+    void IsOn::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
-
+ 
         if (message.getArguments().size() < 1) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }

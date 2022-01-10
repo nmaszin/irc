@@ -5,7 +5,9 @@
 #include <string>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
+#include <nirc/cli/Options.hpp>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/state/ChannelState.hpp>
@@ -26,7 +28,6 @@ namespace nirc::irc::state {
         std::vector<std::unique_ptr<UserState>>& getUsers();
         std::unordered_map<std::string, std::unique_ptr<ChannelState>>& getChannels();
 
-
         bool isOn(const std::string& nick);
 
         void createChannel(const std::string& name);
@@ -35,6 +36,10 @@ namespace nirc::irc::state {
         void deleteChannel(const std::string& name);
 
         responses::BroadcastRespondent getBroadcastRespondent(UserState& sender, bool includeYourself=false) const;
+
+        mutable std::shared_mutex nicksMutex;
+        mutable std::shared_mutex userAllocationMutex;
+        mutable std::shared_mutex channelsMutex;
 
     protected:
         friend class UserState;
@@ -45,9 +50,5 @@ namespace nirc::irc::state {
         std::vector<std::unique_ptr<UserState>> users;
         std::unordered_map<std::string, int> nicks;
         std::unordered_map<std::string, std::unique_ptr<ChannelState>> channels;
-
-        mutable std::mutex nicksMutex;
-        mutable std::mutex userAllocationMutex;
-        mutable std::mutex channelsMutex;
     };
 }

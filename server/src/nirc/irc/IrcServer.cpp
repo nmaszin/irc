@@ -65,7 +65,7 @@ namespace nirc::irc {
 		auto& socket = userState.getSocket();
 		try {
 			message::InputIrcMessage msg(socket.receiveUntil("\n"));
-			messageHandler.handle(userState, msg);
+			messageHandler.handle(this->serverState, userState, msg);
 		} catch (const message::MessageParsingException& e) {
 			// Do nothing
 		}catch (const responses::ResponseException&) {

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <mutex>
+#include <shared_mutex>
 #include <nirc/cli/Options.hpp>
 #include <nirc/irc/state/UserState.hpp>
 #include <nirc/irc/message/InputIrcMessage.hpp>
@@ -10,14 +12,14 @@
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     Join::Join() :
         Command("JOIN")
     {
     }
 
-    void Join::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-        auto& serverState = userState.getServerState();
+    void Join::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
         
         if (message.getArguments().size() < 1) {
@@ -31,6 +33,7 @@ namespace nirc::irc::commands {
 
         if (serverState.doesChannelExist(channel)) {
             auto& channelState = serverState.getChannel(channel);
+            std::scoped_lock lock2(channelState.mutex);
             if (channelState.isBanned(userState)) {
                 privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&channel);
             }
@@ -40,6 +43,7 @@ namespace nirc::irc::commands {
 
         int userDescriptor = userState.getDescriptor();
         auto& channelState = serverState.getChannel(channel);
+        std::scoped_lock lock2(channelState.mutex);
         if (channelState.isOn(userDescriptor)) {
             return;
         }

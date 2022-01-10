@@ -19,7 +19,6 @@ namespace nirc::irc::state {
     {}
 
     UserState& ServerState::addUser(std::unique_ptr<network::TcpSocket>&& socket) {
-        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
         for (int descriptor = 0; descriptor < this->users.size(); descriptor++) {
             if (!users[descriptor]) {
                 this->users[descriptor] = std::make_unique<UserState>(
@@ -51,7 +50,21 @@ namespace nirc::irc::state {
     }
 
     void ServerState::freeUser(UserState& state) {
-        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
+        for (const auto& channelName : state.channels) {
+            auto& channel = this->getChannel(channelName);
+
+            auto it = std::find(channel.participants.begin(), channel.participants.end(), state.descriptor);
+            channel.participants.erase(it);
+
+            auto it2 = std::find(channel.operators.begin(), channel.operators.end(), state.descriptor);
+            channel.participants.erase(it2);
+        }
+
+        if (state.nick) {
+            auto it = this->nicks.find(*state.nick);
+            this->nicks.erase(it);
+        }
+        
         this->users[state.descriptor] = nullptr;
     }
 
@@ -72,12 +85,10 @@ namespace nirc::irc::state {
     }
 
     bool ServerState::isOn(const std::string& nick) {
-        std::lock_guard<std::mutex> guard(this->nicksMutex);
         return this->nicks.find(nick) != this->nicks.end();
     }
 
     bool ServerState::doesChannelExist(const std::string& name) {
-        std::lock_guard<std::mutex> guard(this->channelsMutex);
         return this->channels.find(name) != this->channels.end();
     }
 
@@ -86,7 +97,6 @@ namespace nirc::irc::state {
             throw StateException("Channel does not exist");;
         }
 
-        std::lock_guard<std::mutex> guard(this->channelsMutex);
         return *this->channels[name];
     }
 
@@ -95,13 +105,10 @@ namespace nirc::irc::state {
             throw StateException("Channel has already exist");
         }
 
-        std::lock_guard<std::mutex> guard(this->channelsMutex);
         this->channels[name] = std::make_unique<ChannelState>(*this);
     }
 
     responses::BroadcastRespondent ServerState::getBroadcastRespondent(UserState& sender, bool includeYourself) const {
-        std::lock_guard<std::mutex> guard(this->userAllocationMutex);
-
         std::vector<network::TcpSocket*> sockets;
         for (const auto& userPtr : this->users) {
             if (userPtr) {

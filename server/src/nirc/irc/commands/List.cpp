@@ -10,15 +10,14 @@
 #include <nirc/utils/string.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     List::List() :
         Command("LIST")
     {
     }
 
-    void List::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-
-        auto& serverState = userState.getServerState();
+    void List::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         privateRespondent.send<Response::RPL_LISTSTART>();

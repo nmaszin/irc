@@ -13,7 +13,7 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Who::handle(state::UserState& userState, const message::InputIrcMessage& message) {
+    void Who::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         // Do nothing
     }
 }

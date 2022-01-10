@@ -17,12 +17,10 @@ namespace nirc::irc::state {
     }
 
     const std::vector<int>& ChannelState::getParticipants() const {
-        std::lock_guard<std::mutex> guard(this->mutex);
         return this->participants;
     }
 
     bool ChannelState::isOn(int userDescriptor) const {
-        std::lock_guard<std::mutex> guard(this->mutex);
         auto& userState = this->serverState.getUserByDescriptor(userDescriptor);
         auto it = std::find(
             this->participants.begin(),
@@ -55,7 +53,6 @@ namespace nirc::irc::state {
             throw StateException("User has not joined to channel");
         }
 
-        std::lock_guard<std::mutex> guard(this->mutex);
         auto it = std::find(this->participants.begin(), this->participants.end(), userDescriptor);
         if (it == this->participants.end()) {
             // Not necessary in theory but I add this check to prevent from data inconsistency
@@ -67,7 +64,6 @@ namespace nirc::irc::state {
     }
 
     bool ChannelState::isOperator(int userDescriptor) const {
-        std::lock_guard<std::mutex> guard(this->mutex);
         auto it = std::find(this->operators.begin(), this->operators.end(), userDescriptor);
         return it != this->operators.end();
     }
@@ -77,12 +73,10 @@ namespace nirc::irc::state {
             return;
         }
 
-        std::lock_guard<std::mutex> guard(this->mutex);
         this->operators.push_back(userDescriptor);
     }
 
     void ChannelState::degradeFromOperator(int userDescriptor) {
-        std::lock_guard<std::mutex> guard(this->mutex);
         auto it = std::find(this->operators.begin(), this->operators.end(), userDescriptor);
         if (it != this->operators.end()) {
             this->operators.erase(it);
@@ -140,8 +134,6 @@ namespace nirc::irc::state {
     }
 
     responses::BroadcastRespondent ChannelState::getBroadcastRespondent(UserState& sender, bool includeYourself) const {
-        std::lock_guard<std::mutex> guard(this->mutex);
-
         std::vector<network::TcpSocket*> sockets;
         for (auto participantDescriptor : this->participants) {
             if (includeYourself || participantDescriptor != sender.getDescriptor()) {

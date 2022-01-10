@@ -8,6 +8,6 @@ namespace nirc::irc::commands {
     class Part : public Command {
     public:
         Part();
-        virtual void handle(state::UserState& userState, const message::InputIrcMessage& message) override;
+        virtual void handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) override;
     };
 }

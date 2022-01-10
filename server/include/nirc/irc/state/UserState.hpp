@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <optional>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/StateException.hpp>
@@ -20,8 +21,6 @@ namespace nirc::irc::state {
             int descriptor
         );
 
-        ~UserState();
-
         void setNick(const std::string& nick);
         const std::string& getNick() const;
         std::string getNickArgument() const;
@@ -38,7 +37,6 @@ namespace nirc::irc::state {
         void setRealname(const std::string& nick);
         const std::string& getRealname() const;
 
-        std::mutex& getMutex();
         network::TcpSocket& getSocket();
         ServerState& getServerState();
         int getDescriptor() const;
@@ -49,12 +47,13 @@ namespace nirc::irc::state {
 
         responses::PrivateRespondent& getPrivateRespondent();
 
+        mutable std::shared_mutex mutex;
+
     protected:
         friend class ServerState;
 
         int descriptor;
         ServerState& serverState;
-        mutable std::mutex mutex;
         std::unique_ptr<network::TcpSocket> socket;
 
         responses::PrivateRespondent privateRespondent;

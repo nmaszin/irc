@@ -8,14 +8,14 @@
 #include <nirc/irc/commands/User.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     User::User() :
         Command("USER")
     {
     }
 
-    void User::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-        auto& serverState = userState.getServerState();
+    void User::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 4) {

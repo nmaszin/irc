@@ -9,15 +9,16 @@
 #include <nirc/irc/state/ChannelState.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     Kick::Kick() :
         Command("KICK")
     {
     }
 
-    void Kick::handle(state::UserState& userState, const message::InputIrcMessage& message) {
-        using responses::Response;
-        auto& serverState = userState.getServerState();
+    void Kick::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
+
         auto& args = message.getArguments();
         std::optional<std::string> comment;
 

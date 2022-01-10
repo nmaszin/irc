@@ -8,14 +8,15 @@
 #include <nirc/irc/commands/Ping.hpp>
 
 namespace nirc::irc::commands {
+    using namespace nirc::irc::responses;
+
     Ping::Ping() :
         Command("PING")
     {
     }
 
-    void Ping::handle(state::UserState& userState, const message::InputIrcMessage& message) {
+    void Ping::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
         auto& socket = userState.getSocket();
-        auto& serverState = userState.getServerState();
 
         auto& prefix = serverState.getServerPrefix();
         auto args = message.getArguments();

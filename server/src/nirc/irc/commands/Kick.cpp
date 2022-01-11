@@ -16,7 +16,7 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Kick::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
+    void Kick::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         auto& args = message.getArguments();

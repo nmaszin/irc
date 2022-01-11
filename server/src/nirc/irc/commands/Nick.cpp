@@ -18,28 +18,22 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Nick::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
-        auto privateRespondent = userState.getPrivateRespondent();
-
-        std::optional<std::unique_ptr<message::Prefix>> userPrefix;
-        try {
-            userPrefix = userState.getUserPrefix();
-        } catch (const state::StateException& e) {
-
-        }
-
+    void Nick::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
+        auto privateRespondent = serverState.getPrivateRespondent(descriptor);
         if (message.getArguments().size() < 1) {
             privateRespondent.error<Response::ERR_NONICKNAMEGIVEN>();
         }
 
-        if (userPrefix) {
-            auto broadcastRespondent = serverState.getBroadcastRespondent(userState, true);
+        try {
+            auto broadcastRespondent = serverState.getServerBroadcastRespondent(descriptor, true);
             broadcastRespondent.send(message);
+        } catch (const state::StateException& e) {
+            // Ignore
         }
 
         auto& nick = message.getArguments()[0];
         try {
-            userState.setNick(nick);
+            serverState.setUserNick(descriptor, nick);
         } catch (const state::StateException& e) {
             privateRespondent.error<Response::ERR_NICKNAMEINUSE>(&nick);
         }

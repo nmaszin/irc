@@ -8,6 +8,6 @@ namespace nirc::irc::commands {
     class Quit : public Command {
     public:
         Quit();
-        virtual void handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) override;
+        virtual void handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) override;
     };
 }

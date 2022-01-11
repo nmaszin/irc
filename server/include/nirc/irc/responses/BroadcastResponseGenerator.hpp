@@ -8,10 +8,10 @@
 namespace nirc::irc::responses {
     class BroadcastResponseGenerator {
     public:
-        BroadcastResponseGenerator(std::unique_ptr<message::Prefix>&& prefix);
+        BroadcastResponseGenerator(message::UserPrefix&& prefix);
         message::OutputIrcMessage generate(const message::InputIrcMessage& message);
 
     protected:
-        std::unique_ptr<message::Prefix> prefix;
+        message::UserPrefix prefix;
     };
 }

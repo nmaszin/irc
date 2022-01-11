@@ -19,9 +19,8 @@ namespace nirc::irc::commands {
     {
     }
 
-    void IsOn::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
- 
+    void IsOn::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
         if (message.getArguments().size() < 1) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }

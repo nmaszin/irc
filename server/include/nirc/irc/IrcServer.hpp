@@ -18,7 +18,7 @@ namespace nirc::irc {
 
 	protected:
 		void handleClient(std::unique_ptr<network::TcpSocket>&& socket);
-		void handleMessage(state::UserState& userState);
+		void handleMessage(int userDescriptor);
 
 		state::ServerState serverState;
 		handler::InputMessageHandler messageHandler;

@@ -17,8 +17,8 @@ namespace nirc::irc::commands {
     {
     }
 
-    void PrivMsg::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
+    void PrivMsg::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
 
         if (message.getArguments().size() < 1) {
             privateRespondent.error<Response::ERR_NORECIPIENT>(&this->getName());
@@ -34,23 +34,23 @@ namespace nirc::irc::commands {
                 privateRespondent.error<Response::ERR_NOSUCHNICK>(&recipient);
             }
 
-            auto& channelState = serverState.getChannel(recipient);
-            auto broadcastRespondent = channelState.getBroadcastRespondent(userState);
+            auto broadcastRespondent = serverState.getChannelBroadcastRespondent(descriptor, recipient);
             broadcastRespondent.send(message);
         } else {
-            if (!serverState.isOn(recipient)) {
+            if (!serverState.isOnServer(recipient)) {
                 privateRespondent.error<Response::ERR_NOSUCHNICK>(&recipient);
             }
 
-            auto descriptor = serverState.getUserDescriptorByNick(recipient);
-            auto& recipientState = serverState.getUserByDescriptor(descriptor);
-            auto& socket = recipientState.getSocket();
-            auto prefix = userState.getUserPrefix();
-            socket.send(message::OutputIrcMessage(
-                *prefix,
-                "PRIVMSG",
-                {recipient, text}
-            ).toString());
+            auto recipientDescriptor = serverState.getUserDescriptor(recipient);
+            auto& socket = serverState.getSocket(recipientDescriptor);
+            serverState.forUser(recipientDescriptor, [&](state::UserState& user) {
+                auto prefix = user.getUserPrefix();
+                socket.send(message::OutputIrcMessage(
+                    prefix,
+                    "PRIVMSG",
+                    {recipient, text}
+                ).toString());
+            });
         }
     }
 }

@@ -59,7 +59,7 @@ namespace nirc::irc::state {
         return identifier[0] == '#';
     }
 
-    bool ChannelState::_isBanned(int userDescriptor, UserState& userState) {
+    bool ChannelState::_isBanned(int userDescriptor, const UserState& userState) const {
         std::shared_lock<std::shared_mutex> guard(this->mutex);
         
         for (const auto& mask : this->bans) {

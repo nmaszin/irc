@@ -19,48 +19,45 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Join::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
-        
+    void Join::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
         if (message.getArguments().size() < 1) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
-        const auto& channel = message.getArguments()[0];
-        if (!state::ChannelState::isChannel(channel)) {
-            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
+        const auto& channelName = message.getArguments()[0];
+        if (!state::ChannelState::isChannel(channelName)) {
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channelName);
         }
 
-        if (serverState.doesChannelExist(channel)) {
-            auto& channelState = serverState.getChannel(channel);
-            std::scoped_lock lock2(channelState.mutex);
-            if (channelState.isBanned(userState)) {
-                privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&channel);
+
+        if (serverState.doesChannelExist(channelName)) {
+            if (serverState.isBanned(channelName, descriptor)) {
+                privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&name);
             }
         } else {
-            serverState.createChannel(channel);
+            serverState.addChannel(channelName);
         }
 
-        int userDescriptor = userState.getDescriptor();
-        auto& channelState = serverState.getChannel(channel);
-        std::scoped_lock lock2(channelState.mutex);
-        if (channelState.isOn(userDescriptor)) {
+        if (serverState.isOnChannel(channelName, descriptor)) {
             return;
         }
 
-        channelState.join(userState.getDescriptor());
-        
-        auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
+        serverState.joinChannel(channelName, descriptor);
+
+        auto broadcastRespondent = serverState.getChannelBroadcastRespondent(descriptor, channelName, true);
         broadcastRespondent.send(message);
 
-        const auto& topic = channelState.getTopic();
-        if (topic) {
-            privateRespondent.send<Response::RPL_TOPIC>(&channel, &*topic);
-        } else {
-            privateRespondent.send<Response::RPL_NOTOPIC>(&channel);
-        }
+        serverState.forChannel(channelName, [&](const std::string& name, state::ChannelState& channel) {
+            const auto& topic = channel.getTopic();
+            if (topic) {
+                privateRespondent.send<Response::RPL_TOPIC>(&channelName, &*topic);
+            } else {
+                privateRespondent.send<Response::RPL_NOTOPIC>(&channelName);
+            }
+        });
 
-        privateRespondent.send<Response::RPL_NAMREPLY>(&channel, &serverState, &channelState);
-        privateRespondent.send<Response::RPL_ENDOFNAMES>(&channel);
+        privateRespondent.send<Response::RPL_NAMREPLY>(&channelName, &serverState, channelName);
+        privateRespondent.send<Response::RPL_ENDOFNAMES>(&channelName);
     }
 }

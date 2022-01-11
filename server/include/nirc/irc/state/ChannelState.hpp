@@ -28,7 +28,7 @@ namespace nirc::irc::state {
         static bool isChannel(const std::string& identifier);
 
 
-        bool _isBanned(int userDescriptor, UserState& user);
+        bool _isBanned(int userDescriptor, const UserState& user) const;
         void _join(int userDescriptor);
         void _leave(int userDescriptor);
 

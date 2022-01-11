@@ -17,7 +17,7 @@ namespace nirc::irc::commands {
     {
     }
 
-    void List::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
+    void List::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         privateRespondent.send<Response::RPL_LISTSTART>();

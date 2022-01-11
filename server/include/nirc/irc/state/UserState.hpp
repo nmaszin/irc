@@ -38,8 +38,7 @@ namespace nirc::irc::state {
         std::optional<std::string> getRealname() const;
         std::vector<std::string> getChannels() const;
 
-        int getDescriptor() const;
-        std::unique_ptr<message::Prefix> getUserPrefix() const;
+        message::UserPrefix getUserPrefix() const;
         network::TcpSocket& getSocket();
         responses::PrivateRespondent& getPrivateRespondent();
 

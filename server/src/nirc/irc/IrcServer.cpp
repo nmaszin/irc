@@ -45,27 +45,27 @@ namespace nirc::irc {
 	}
 
 	void IrcServer::handleClient(std::unique_ptr<network::TcpSocket>&& socket) {
-		state::UserState *userState;
+		int descriptor;
 		try {
-			userState = &this->serverState.addUser(std::move(socket));
+			descriptor = this->serverState.addUser(std::move(socket));
 
-			auto& privateRespondent = userState->getPrivateRespondent();
+			auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
 			privateRespondent.send<responses::Response::ERR_NOMOTD>();
 
 			while (true) {
-				this->handleMessage(*userState);
+				this->handleMessage(descriptor);
 			}
 		} catch (const network::TcpException&) {
 			// Handle client disconnection
-			this->serverState.freeUser(*userState);
+			this->serverState.deleteUser(descriptor);
 		}
 	}
 
-	void IrcServer::handleMessage(state::UserState& userState) {
-		auto& socket = userState.getSocket();
+	void IrcServer::handleMessage(int descriptor) {
+		auto& socket = this->serverState.getSocket(descriptor);
 		try {
-			message::InputIrcMessage msg(socket.receiveUntil("\n"));
-			messageHandler.handle(this->serverState, userState, msg);
+			message::InputIrcMessage message(socket.receiveUntil("\n"));
+			messageHandler.handle(this->serverState, descriptor, message);
 		} catch (const message::MessageParsingException& e) {
 			// Do nothing
 		}catch (const responses::ResponseException&) {

@@ -17,7 +17,7 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Topic::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
+    void Topic::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         if (message.getArguments().size() < 1) {

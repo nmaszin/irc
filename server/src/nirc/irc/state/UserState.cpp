@@ -87,7 +87,7 @@ namespace nirc::irc::state {
         return this->realname;
     }
 
-    std::vector<std::string> getChannels() const {
+    std::vector<std::string> UserState::getChannels() const {
         std::shared_lock<std::shared_mutex> guard(this->mutex);
         return this->channels;
     }
@@ -116,7 +116,7 @@ namespace nirc::irc::state {
     void UserState::_joinChannel(const std::string& name) {
         std::lock_guard<std::shared_mutex> guard(this->mutex);
         auto it = std::find(this->channels.begin(), this->channels.end(), name);
-        if (it != this->channels.end();) {
+        if (it != this->channels.end()) {
             throw StateException("User has already joined channel");
         }
         this->channels.push_back(name);

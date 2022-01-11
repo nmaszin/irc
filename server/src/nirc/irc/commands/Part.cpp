@@ -16,21 +16,20 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Part::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
+    void Part::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
 
         if (message.getArguments().size() < 1) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
-        const auto& channel = message.getArguments()[0];
-        if (!state::ChannelState::isChannel(channel) || !serverState.doesChannelExist(channel)) {
-            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
+        const auto& channelName = message.getArguments()[0];
+        if (!state::ChannelState::isChannel(channelName) || !serverState.doesChannelExist(channelName)) {
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channelName);
         }
 
-        auto& channelState = serverState.getChannel(channel);
-        auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
+        auto broadcastRespondent = serverState.getChannelBroadcastRespondent(descriptor, channelName, true);
         broadcastRespondent.send(message);
-        channelState.leave(userState.getDescriptor());
+        serverState.leaveChannel(channelName, descriptor);
     }
 }

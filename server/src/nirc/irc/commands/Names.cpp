@@ -17,7 +17,7 @@ namespace nirc::irc::commands {
     {
     }
 
-    void Names::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
+    void Names::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
         auto& privateRespondent = userState.getPrivateRespondent();
 
         for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {

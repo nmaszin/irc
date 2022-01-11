@@ -9,6 +9,10 @@
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/utils/string.hpp>
 
+namespace nirc::irc::state {
+    class UserState;
+}
+
 namespace nirc::irc::responses {
     class PrivateResponseGenerator {
     public:

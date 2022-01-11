@@ -15,17 +15,19 @@ namespace nirc::irc::commands {
     {
     }
 
-    void User::handle(state::ServerState& serverState, state::UserState& userState, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
+    void User::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
 
         if (message.getArguments().size() < 4) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
         const auto& args = message.getArguments();
-        userState.setUsername(args[0]);
-        userState.setHostname(args[1]);
-        userState.setServername(args[2]);
-        userState.setRealname(args[3]);
+        serverState.forUser(descriptor, [&](state::UserState& user) {
+            user.setUsername(args[0]);
+            user.setHostname(args[1]);
+            user.setServername(args[2]);
+            user.setRealname(args[3]);
+        });
     }
 }

@@ -17,41 +17,43 @@ namespace nirc::irc::commands {
     }
 
     void Kick::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
 
         auto& args = message.getArguments();
-        std::optional<std::string> comment;
-
         if (args.size() < 2) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
-        const auto& channel = args[0];
+        const auto& channelName = args[0];
         const auto& nick = args[1];
+        std::optional<std::string> comment;
         if (args.size() >= 3) {
             comment = args[2];
         }
 
-        if (!state::ChannelState::isChannel(channel) || !serverState.doesChannelExist(channel)) {
-            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
+        if (!state::ChannelState::isChannel(channelName) || !serverState.doesChannelExist(channelName)) {
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channelName);
         }
 
-        auto& channelState = serverState.getChannel(channel);
-        if (!channelState.isOperator(userState.getDescriptor())) {
-            privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channel);
-        }
+        serverState.forChannel(channelName, [&](const std::string& name, state::ChannelState& channel) {
+            if (!channel.isOperator(descriptor)) {
+                privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channelName);
+            }
+        });
 
-        if (!serverState.isOn(nick)) {
+        
+        if (!serverState.isOnServer(nick)) {
             privateRespondent.error<Response::ERR_NOSUCHNICK>(&nick);
         }
 
-        auto kickedUserDescriptor = serverState.getUserDescriptorByNick(nick);
-        if (!channelState.isOn(kickedUserDescriptor)) {
-            privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channel);
+        int kickedUserDescriptor = serverState.getUserDescriptor(nick);
+        if (!serverState.isOnChannel(channelName, kickedUserDescriptor)) {
+            privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channelName);
         }
 
-        auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
+        auto broadcastRespondent = serverState.getChannelBroadcastRespondent(descriptor, channelName, true);
         broadcastRespondent.send(message);
-        channelState.leave(kickedUserDescriptor);
+
+        serverState.leaveChannel(channelName, kickedUserDescriptor);
     }
 }

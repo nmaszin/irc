@@ -33,7 +33,7 @@ namespace nirc::irc::commands {
 
         if (serverState.doesChannelExist(channelName)) {
             if (serverState.isBanned(channelName, descriptor)) {
-                privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&name);
+                privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&channelName);
             }
         } else {
             serverState.addChannel(channelName);
@@ -57,7 +57,7 @@ namespace nirc::irc::commands {
             }
         });
 
-        privateRespondent.send<Response::RPL_NAMREPLY>(&channelName, &serverState, channelName);
+        privateRespondent.send<Response::RPL_NAMREPLY>(&channelName, &serverState);
         privateRespondent.send<Response::RPL_ENDOFNAMES>(&channelName);
     }
 }

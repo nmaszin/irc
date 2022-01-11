@@ -37,7 +37,7 @@ namespace nirc::irc::responses {
     ) {
         std::vector<std::string> nicks;
         for (const auto& nick : *nicksToCheck) {
-            if (serverState->isOn(nick)) {
+            if (serverState->isOnServer(nick)) {
                 nicks.push_back(nick);
             }
         }
@@ -54,12 +54,17 @@ namespace nirc::irc::responses {
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_LIST>(
-        const std::string *channelName,
-        state::ChannelState *channel
+        state::ServerState *serverState,
+        const std::string *channelName
     ) {
-        auto usersCount = channel->getParticipants().size();
+        std::size_t usersCount;
+        std::optional<std::string> topic;
+        serverState->forChannel(*channelName, [&](const std::string&, state::ChannelState& channel) {
+            usersCount = channel.getParticipants().size();
+            topic = channel.getTopic();
+        });
+
         auto usersCountString = std::to_string(usersCount);
-        const auto& topic = channel->getTopic();
         auto topicString = topic ? *topic : "";
 
         return { *channelName, usersCountString, topicString };
@@ -82,45 +87,49 @@ namespace nirc::irc::responses {
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_NOTOPIC>(
-        const std::string *channel
+        const std::string *channelName
     ) {
-        return { *channel, "No topic is set" };
+        return { *channelName, "No topic is set" };
     }
 
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_TOPIC>(
-        const std::string *channel,
+        const std::string *channelName,
         const std::string *topic
     ) {
-        return { *channel, *topic };
+        return { *channelName, *topic };
     }
 
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_NAMREPLY>(
-        const std::string *channel,
-        state::ServerState *serverState,
-        state::ChannelState *channelState
+        const std::string *channelName,
+        state::ServerState *serverState
     ) {
         std::vector<std::string> participantsNames;
-        for (const auto& participant : channelState->getParticipants()) {
-            auto& user = serverState->getUserByDescriptor(participant);
-            auto& nick = user.getNick();
-            auto isOperator = channelState->isOperator(participant);
-            std::string operatorPrefix = isOperator ? "@" : "";
-            participantsNames.push_back(operatorPrefix + nick);
-        }
+        serverState->forChannel(*channelName, [&](const std::string& name, state::ChannelState& channel) {
+            for (auto&& participant : channel.getParticipants()) {
+                std::optional<std::string> nick;
+                serverState->forUser(participant, [&](state::UserState& user) {
+                    nick = user.getNick();
+                });
 
-        return { "=", *channel, utils::join(participantsNames, " ") };
+                auto isOperator = channel.isOperator(participant);
+                std::string operatorPrefix = isOperator ? "@" : "";
+                participantsNames.push_back(operatorPrefix + *nick);
+            }
+        });
+
+        return { "=", *channelName, utils::join(participantsNames, " ") };
     }
 
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::RPL_ENDOFNAMES>(
-        const std::string *channel
+        const std::string *channelName
     ) {
-        return { *channel, "End of /NAMES list" };
+        return { *channelName, "End of /NAMES list" };
     }
 
 
@@ -134,17 +143,17 @@ namespace nirc::irc::responses {
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_NOSUCHCHANNEL>(
-        const std::string *channel
+        const std::string *channelName
     ) {
-        return { *channel, "No such channel" };
+        return { *channelName, "No such channel" };
     }
 
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_CANNOTSENDTOCHAN>(
-        const std::string *channel
+        const std::string *channelName
     ) {
-        return { *channel, "Cannot send to channel" };
+        return { *channelName, "Cannot send to channel" };
     }
 
 
@@ -192,9 +201,9 @@ namespace nirc::irc::responses {
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_NOTONCHANNEL>(
-        const std::string *channel
+        const std::string *channelName
     ) {
-        return { *channel, "You're not on that channel" };
+        return { *channelName, "You're not on that channel" };
     }
 
 
@@ -207,15 +216,15 @@ namespace nirc::irc::responses {
  
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_BANNEDFROMCHAN>(
-        const std::string *channel
+        const std::string *channelName
     ) {
-        return { *channel, ":Cannot join channel (+b)" };
+        return { *channelName, ":Cannot join channel (+b)" };
     }
 
     template <>
     std::vector<std::string> PrivateResponseGenerator::args<Response::ERR_CHANOPRIVSNEEDED>(
-        const std::string *channel
+        const std::string *channelName
     ) {
-        return { *channel, "You're not channel operator" };
+        return { *channelName, "You're not channel operator" };
     }
 }

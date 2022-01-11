@@ -18,12 +18,11 @@ namespace nirc::irc::commands {
     }
 
     void Names::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
 
-        for (const auto& [channelName, channelStatePtr] : serverState.getChannels()) {
-            auto& channelState = *channelStatePtr;
-            privateRespondent.send<Response::RPL_NAMREPLY>(&channelName, &serverState, &channelState);
-            privateRespondent.send<Response::RPL_ENDOFNAMES>(&channelName);
-        }
+        serverState.forallChannels([&](const std::string& name, state::ChannelState& channel) {
+            privateRespondent.send<Response::RPL_NAMREPLY>(&name, &serverState);
+            privateRespondent.send<Response::RPL_ENDOFNAMES>(&name);
+        });
     }
 }

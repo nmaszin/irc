@@ -16,8 +16,7 @@ namespace nirc::irc::commands {
     }
 
     void Ping::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
-        auto& socket = userState.getSocket();
-
+        auto& socket = serverState.getSocket(descriptor);
         auto& prefix = serverState.getServerPrefix();
         auto args = message.getArguments();
         socket.send(message::OutputIrcMessage(

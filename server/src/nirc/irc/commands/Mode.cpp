@@ -20,7 +20,7 @@ namespace nirc::irc::commands {
     }
 
     void Mode::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
 
         // Temporary fix
         if (message.getArguments().size() == 1) {
@@ -40,10 +40,10 @@ namespace nirc::irc::commands {
                 privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channelName);
             }
 
-            auto& channel = serverState.getChannel(channelName);
-            if (!channel.isOn(userState.getDescriptor())) {
+            if (!serverState.isOnChannel(channelName, descriptor)) {
                 privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channelName);
             }
+
 
             std::optional<bool> plus;
             std::optional<bool> operatorFlag;
@@ -61,32 +61,33 @@ namespace nirc::irc::commands {
             }
 
             if (plus) {
-                if (!channel.isOperator(userState.getDescriptor())) {
-                    privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channelName);
-                }
-
-                auto& args = message.getArguments();
-
-                int argumentIndex = 2;
-                if (operatorFlag) {
-                    auto& nick = message.getArguments()[argumentIndex++];
-                    auto descriptor = serverState.getUserDescriptorByNick(nick);
-                    if (*operatorFlag) {
-                        channel.promoteToOperator(descriptor);
-                    } else {
-                        channel.degradeFromOperator(descriptor);
+                serverState.forChannel(channelName, [&](const std::string& name, state::ChannelState& channel) {
+                    if (!channel.isOperator(descriptor)) {
+                        privateRespondent.error<Response::ERR_CHANOPRIVSNEEDED>(&channelName);
                     }
-                }
-                if (banFlag) {
-                    auto& mask = message.getArguments()[argumentIndex++];
-                    if (*banFlag) {
-                        channel.ban(mask);
-                    } else {
-                        channel.unban(mask);
-                    }
-                }
 
-                auto broadcastRespondent = channel.getBroadcastRespondent(userState, true);
+                    auto& args = message.getArguments();
+                    int argumentIndex = 2;
+                    if (operatorFlag) {
+                        auto& nick = message.getArguments()[argumentIndex++];
+                        auto userDescriptor = serverState.getUserDescriptor(nick);
+                        if (*operatorFlag) {
+                            channel.promoteToOperator(userDescriptor);
+                        } else {
+                            channel.degradeFromOperator(userDescriptor);
+                        }
+                    }
+                    if (banFlag) {
+                        auto& mask = message.getArguments()[argumentIndex++];
+                        if (*banFlag) {
+                            channel.ban(mask);
+                        } else {
+                            channel.unban(mask);
+                        }
+                    }
+                });
+
+                auto broadcastRespondent = serverState.getChannelBroadcastRespondent(descriptor, channelName, true);
                 broadcastRespondent.send(message);
             } else {
                 privateRespondent.send<Response::RPL_CHANNELMODEIS>(&channelName);

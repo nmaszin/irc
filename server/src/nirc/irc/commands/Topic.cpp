@@ -18,38 +18,38 @@ namespace nirc::irc::commands {
     }
 
     void Topic::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
-        auto& privateRespondent = userState.getPrivateRespondent();
-
+        auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
         if (message.getArguments().size() < 1) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }
 
-        const auto& channel = message.getArguments()[0];
-        if (!serverState.doesChannelExist(channel)) {
-            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channel);
+        const auto& channelName = message.getArguments()[0];
+        if (!serverState.doesChannelExist(channelName)) {
+            privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channelName);
         }
 
-        auto& channelState = serverState.getChannel(channel);
         if (message.getArguments().size() < 2) {
-            const auto& topic = channelState.getTopic();
-            if (topic) {
-                privateRespondent.send<Response::RPL_TOPIC>(&channel, &*topic);
-            } else {
-                privateRespondent.send<Response::RPL_NOTOPIC>(&channel);
-            }
-
+            serverState.forChannel(channelName, [&](const std::string& name, state::ChannelState& channel) {
+                const auto& topic = channel.getTopic();
+                if (topic) {
+                    privateRespondent.send<Response::RPL_TOPIC>(&channelName, &*topic);
+                } else {
+                    privateRespondent.send<Response::RPL_NOTOPIC>(&channelName);
+                }
+            });
             return;
         }
 
-        auto userDescriptor = userState.getDescriptor();
-        if (!channelState.isOn(userDescriptor)) {
-            privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channel);
+        if (!serverState.isOnChannel(channelName, descriptor)) {
+            privateRespondent.error<Response::ERR_NOTONCHANNEL>(&channelName);
         }
 
-        const auto& newTopic = message.getArguments()[1];
-        channelState.setTopic(newTopic);
+        serverState.forChannel(channelName, [&](const std::string& name, state::ChannelState& channel) {
+            const auto& newTopic = message.getArguments()[1];
+            channel.setTopic(newTopic);
+        });
 
-        auto broadcastRespondent = channelState.getBroadcastRespondent(userState, true);
+        auto broadcastRespondent = serverState.getChannelBroadcastRespondent(descriptor, channelName, true);
         broadcastRespondent.send(message);
     }
 }

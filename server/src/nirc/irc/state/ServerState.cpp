@@ -95,6 +95,11 @@ namespace nirc::irc::state {
         std::lock_guard<std::shared_mutex>(this->usersMutex);
         auto& user = this->_getUser(descriptor);
 
+        auto it = this->nicks.find(nick);
+        if (it != this->nicks.end()) {
+            throw StateException("Nick is already used");
+        }
+
         auto oldNick = user.getNick();
         if (oldNick) {
             auto it = this->nicks.find(*oldNick);
@@ -192,11 +197,11 @@ namespace nirc::irc::state {
     bool ServerState::isBanned(const std::string& name, int descriptor) const {
         std::shared_lock<std::shared_mutex>(this->channelsMutex);
         auto& channel = this->_getChannel(name);
-
-        std::shared_lock<std::shared_mutex>(this->usersMutex);
-        auto& user = this->_getUser(descriptor);
-
-        return channel._isBanned(descriptor, user);
+        {
+            std::shared_lock<std::shared_mutex>(this->usersMutex);
+            auto& user = this->_getUser(descriptor);
+            return channel._isBanned(descriptor, user);
+        }
     }
 
     responses::BroadcastRespondent ServerState::getServerBroadcastRespondent(int senderDescriptor, bool includeSender) {
@@ -257,7 +262,12 @@ namespace nirc::irc::state {
     }
 
     const UserState& ServerState::_getUser(int descriptor) const {
-        return this->_getUser(descriptor);
+        auto& ptr = this->users[descriptor];
+        if (!ptr) {
+            throw StateException("User with given descriptor does not exist");
+        }
+
+        return *ptr;
     }
 
     ChannelState& ServerState::_getChannel(const std::string& name) {
@@ -266,10 +276,15 @@ namespace nirc::irc::state {
             throw StateException("Channel with given name does not exist");
         }
 
-        return *it->second;
+        return *(it->second);
     }
 
     const ChannelState& ServerState::_getChannel(const std::string& name) const {
-        return this->_getChannel(name);
+        auto it = this->channels.find(name);
+        if (it == this->channels.end()) {
+            throw StateException("Channel with given name does not exist");
+        }
+
+        return *(it->second);
     }
 }

@@ -68,10 +68,12 @@ namespace nirc::irc {
 			messageHandler.handle(this->serverState, descriptor, message);
 		} catch (const message::MessageParsingException& e) {
 			// Do nothing
-		}catch (const responses::ResponseException&) {
+		} catch (const responses::ResponseException&) {
 			// Do nothing
 			// Error message has been already sent to client
 			// Exception only breaks processing the error commend
+		} catch (const state::StateException& e) {
+			std::cerr << "State exception: " << e.what() << "\n";
 		}
 	}
 }

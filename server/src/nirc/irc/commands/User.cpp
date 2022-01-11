@@ -17,7 +17,6 @@ namespace nirc::irc::commands {
 
     void User::handle(state::ServerState& serverState, int descriptor, const message::InputIrcMessage& message) {
         auto& privateRespondent = serverState.getPrivateRespondent(descriptor);
-
         if (message.getArguments().size() < 4) {
             privateRespondent.error<Response::ERR_NEEDMOREPARAMS>(&this->getName());
         }

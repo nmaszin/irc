@@ -30,7 +30,6 @@ namespace nirc::irc::commands {
             privateRespondent.error<Response::ERR_NOSUCHCHANNEL>(&channelName);
         }
 
-
         if (serverState.doesChannelExist(channelName)) {
             if (serverState.isBanned(channelName, descriptor)) {
                 privateRespondent.error<Response::ERR_BANNEDFROMCHAN>(&channelName);

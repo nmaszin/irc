@@ -31,7 +31,7 @@ namespace nirc::irc::responses {
 
     protected:
         BroadcastResponseGenerator generator;
-        std::vector<network::TcpSocket*> sockets; //change it to prevent nullptr dereferencing
+        std::vector<network::TcpSocket*> sockets;
     };
 }
 

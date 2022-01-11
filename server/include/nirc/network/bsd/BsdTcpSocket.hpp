@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <mutex>
 #include <nirc/network/TcpSocket.hpp>
 #include <nirc/network/bsd/BsdAddressInfo.hpp>
 
@@ -24,5 +25,7 @@ namespace nirc::network::bsd {
         std::string read_buffer;
         std::string::size_type read_start_index = BUFFER_SIZE;
         std::string::size_type read_end_index = BUFFER_SIZE;
+
+        mutable std::mutex mutex;
     };
 }

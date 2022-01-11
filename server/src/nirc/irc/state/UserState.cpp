@@ -14,141 +14,120 @@
 
 namespace nirc::irc::state {
     UserState::UserState(
-        ServerState& serverState,
         std::unique_ptr<network::TcpSocket>&& socket,
+        const message::ServerPrefix& serverPrefix,
         int descriptor
     ) :
-        serverState(serverState),
         socket(std::move(socket)),
         descriptor(descriptor),
         privateRespondent(
             responses::PrivateResponseGenerator(
-                serverState.getServerPrefix(),
-                this->nick
+                serverPrefix,
+                *this
             ),
             *this->socket
         )
     {
     }
 
-    std::unique_ptr<message::Prefix> UserState::getUserPrefix() const {
-        if (!this->nick) {
-            throw StateException("NICK not called");
-        } else if (!this->username) {
-            throw StateException("USER not called");
-        }
-
-        auto host = this->socket->getInfo().getHostname();
-
-        return std::make_unique<message::UserPrefix>(
-            std::string(*this->nick),
-            std::optional<std::string>(*this->username),
-            std::move(host)
-        );
-    }
-
-    void UserState::setNick(const std::string& nick) {
-        auto& nicks = this->serverState.nicks;        
-        if (nicks.find(nick) != nicks.end()) {
-            throw StateException("Nick already used");
-        }
-        
-        if (this->nick) {
-            // Remove old nick from all nicks set
-            nicks.erase(*this->nick);
-        }
-        this->nick = nick;
-        nicks[*this->nick] = this->descriptor;
-    };
-
-    const std::string& UserState::getNick() const {
-        if (this->nick) {
-            return *this->nick;
-        } else {
-            throw StateException("Nick has not asgned");
-        }
-    }
-
-    std::string UserState::getNickArgument() const {
-        if (this->nick) {
-            return *this->nick;
-        } else {
-            return "*";
-        }
-    }
-
-    void UserState::setUsername(const std::string& username) {
-        this->username = username;
-    }
-
-    const std::string& UserState::getUsername() const {
-        if (this->username) {
-            return *this->username;
-        } else {
-            throw StateException("Username has not assigned");
-        }
-    }
-
-    void UserState::setHostname(const std::string& hostname) {
-        this->hostname = hostname;
-    }
-
-    const std::string& UserState::getHostname() const {
-        if (this->hostname) {
-            return *this->hostname;
-        } else {
-            throw StateException("Host has not assigned");
-        }
-    }
-
-    void UserState::setServername(const std::string& servername) {
-        this->servername = servername;
-    }
-
-    const std::string& UserState::getServername() const {
-        if (this->servername) {
-            return *this->servername;
-        } else {
-            throw StateException("Servername has not assigned");
-        }
-    }
-
-    void UserState::setRealname(const std::string& realname) {
-        this->realname = realname;
-    }
-
-    const std::string& UserState::getRealname() const {
-        if (this->realname) {
-            return *this->realname;
-        } else {
-            throw StateException("Realname has not assigned");
-        }
-    }
-    ServerState& UserState::getServerState() {
-        return this->serverState;
+    int UserState::getDescriptor() const {
+        return this->descriptor;
     }
 
     network::TcpSocket& UserState::getSocket() {
         return *this->socket;
     }
 
-    int UserState::getDescriptor() const {
-        return this->descriptor;
-    }
-
-    bool UserState::operator==(const UserState& other) const {
-        if (!this->nick || !other.nick) {
-            throw StateException("Trying to compare uninitialized users");
-        }
-
-        return *this->nick == *other.nick;
-    }
-
-    bool UserState::operator!=(const UserState& other) const {
-        return !(*this == other);
-    }
-
     responses::PrivateRespondent& UserState::getPrivateRespondent() {
         return this->privateRespondent;
+    }
+
+    void UserState::setUsername(const std::string& username) {
+        std::lock_guard<std::shared_mutex> guard(this->mutex);
+        this->username = username;
+    }
+
+    void UserState::setHostname(const std::string& hostname) {
+        std::lock_guard<std::shared_mutex> guard(this->mutex);
+        this->hostname = hostname;
+    }
+
+    void UserState::setServername(const std::string& servername) {
+        std::lock_guard<std::shared_mutex> guard(this->mutex);
+        this->servername = servername;
+    }
+
+    void UserState::setRealname(const std::string& realname) {
+        std::lock_guard<std::shared_mutex> guard(this->mutex);
+        this->realname = realname;
+    }
+
+    std::optional<std::string> UserState::getNick() const {
+        std::shared_lock<std::shared_mutex> guard(this->mutex);
+        return this->nick;
+    }
+
+    std::optional<std::string> UserState::getUsername() const {
+        std::shared_lock<std::shared_mutex> guard(this->mutex);
+        return this->username;
+    }
+
+    std::optional<std::string> UserState::getHostname() const {
+        std::shared_lock<std::shared_mutex> guard(this->mutex);
+        return this->hostname;
+    }
+
+    std::optional<std::string> UserState::getServername() const {
+        std::shared_lock<std::shared_mutex> guard(this->mutex);
+        return this->servername;
+    }
+
+    std::optional<std::string> UserState::getRealname() const {
+        std::shared_lock<std::shared_mutex> guard(this->mutex);
+        return this->realname;
+    }
+
+    std::vector<std::string> getChannels() const {
+        std::shared_lock<std::shared_mutex> guard(this->mutex);
+        return this->channels;
+    }
+
+    message::UserPrefix UserState::getUserPrefix() const {
+        std::shared_lock<std::shared_mutex> guard(this->mutex);
+
+        if (!this->nick) {
+            throw StateException("NICK not called");
+        } else if (!this->username) {
+            throw StateException("USER not called");
+        }
+
+        return message::UserPrefix(
+            std::string(*this->nick),
+            std::optional<std::string>(*this->username),
+            this->socket->getInfo().getHostname()
+        );
+    }
+
+    void UserState::_setNick(const std::string& nick) {
+        std::lock_guard<std::shared_mutex> guard(this->mutex);
+        this->nick = nick;
+    }
+
+    void UserState::_joinChannel(const std::string& name) {
+        std::lock_guard<std::shared_mutex> guard(this->mutex);
+        auto it = std::find(this->channels.begin(), this->channels.end(), name);
+        if (it != this->channels.end();) {
+            throw StateException("User has already joined channel");
+        }
+        this->channels.push_back(name);
+    }
+    
+    void UserState::_leaveChannel(const std::string& name) {
+        std::lock_guard<std::shared_mutex> guard(this->mutex);
+        auto it = std::find(this->channels.begin(), this->channels.end(), name);
+        if (it == this->channels.end()) {
+            throw StateException("User is not on channel");
+        }
+        this->channels.erase(it);
     }
 }

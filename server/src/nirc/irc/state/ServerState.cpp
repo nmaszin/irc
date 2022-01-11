@@ -18,56 +18,6 @@ namespace nirc::irc::state {
         users(options.getMaxClientsNumber())
     {}
 
-    UserState& ServerState::addUser(std::unique_ptr<network::TcpSocket>&& socket) {
-        for (int descriptor = 0; descriptor < this->users.size(); descriptor++) {
-            if (!users[descriptor]) {
-                this->users[descriptor] = std::make_unique<UserState>(
-                    *this,
-                    std::move(socket),
-                    descriptor
-                );
-                return *this->users[descriptor];
-            }
-        }
-
-        throw StateException("Could not create new user");
-    }
-
-    UserState& ServerState::getUserByDescriptor(int descriptor) {
-        if (!this->users[descriptor]) {
-            throw StateException("User with given descriptor does not exist");
-        }
-
-        return *this->users[descriptor];
-    }
-
-    int ServerState::getUserDescriptorByNick(const std::string& nick) {
-        if (!this->isOn(nick)) {
-            throw StateException("User not exist");
-        }
-
-        return this->nicks[nick];
-    }
-
-    void ServerState::freeUser(UserState& state) {
-        for (const auto& channelName : state.channels) {
-            auto& channel = this->getChannel(channelName);
-
-            auto it = std::find(channel.participants.begin(), channel.participants.end(), state.descriptor);
-            channel.participants.erase(it);
-
-            auto it2 = std::find(channel.operators.begin(), channel.operators.end(), state.descriptor);
-            channel.participants.erase(it2);
-        }
-
-        if (state.nick) {
-            auto it = this->nicks.find(*state.nick);
-            this->nicks.erase(it);
-        }
-        
-        this->users[state.descriptor] = nullptr;
-    }
-
     const cli::Options& ServerState::getOptions() const {
         return this->options;
     }
@@ -76,45 +26,163 @@ namespace nirc::irc::state {
         return this->prefix;
     }
 
-    std::vector<std::unique_ptr<UserState>>& ServerState::getUsers() {
-        return this->users;
+    int ServerState::addUser(std::unique_ptr<network::TcpSocket>&& socket) {
+        for (int descriptor = 0; descriptor < this->users.size(); descriptor++) {
+            if (!users[descriptor]) {
+                this->users[descriptor] = std::make_unique<UserState>(
+                    std::move(socket),
+                    this->prefix,
+                    descriptor
+                );
+                return descriptor;
+            }
+        }
+
+        throw StateException("Could not create new user");
     }
 
-    std::unordered_map<std::string, std::unique_ptr<ChannelState>>& ServerState::getChannels() {
-        return this->channels;
+    void ServerState::forUser(int descriptor, const std::function<void(UserState&)>& cb) {
+        auto& ptr = this->users[descriptor];
+        if (!ptr) {
+            throw StateException("User with given descriptor does not exist");
+        }
+
+        cb(*ptr);
     }
 
-    bool ServerState::isOn(const std::string& nick) {
+    void ServerState::forallUsers(const std::function<void(UserState&)>& cb) {
+        for (auto& ptr : this->users) {
+            if (ptr) {
+                cb(*ptr);
+            }
+        }
+    }
+
+    void ServerState::deleteUser(int descriptor) {
+        auto& ptr = users[descriptor];
+        if (!ptr) {
+            throw StateException("User does not exist");
+        }
+        auto& user = *ptr;
+
+        auto userChannels = user.getChannels();
+        for (const auto& channel : userChannels) {
+            this->channels[channel]->_leave(descriptor);
+        }
+
+        auto nick = user.getNick();
+        if (nick) {
+            auto it = this->nicks.find(*nick);
+            this->nicks.erase(it);
+        }
+ 
+        this->users[descriptor] = nullptr;
+    }
+
+    bool ServerState::isOnServer(const std::string& nick) {
         return this->nicks.find(nick) != this->nicks.end();
+    }
+
+    void ServerState::setUserNick(int descriptor, const std::string& nick) {
+        // May check whether descriptor is from range <0, n>
+        auto& ptr = this->users[descriptor];
+        if (!ptr) {
+            throw StateException("Invalid descriptor");
+        }
+        auto& user = *ptr;
+
+        auto oldNick = user.getNick();
+        if (oldNick) {
+            auto it = this->nicks.find(*oldNick);
+            this->nicks.erase(it);
+        }
+
+        user._setNick(nick);
+        this->nicks[nick] = descriptor;
+    }
+
+    int ServerState::getUserDescriptor(const std::string& nick) {
+        auto it = this->nicks.find(nick);
+        if (it == this->nicks.end()) {
+            throw StateException("User with given nick does not exist");
+        }
+        return this->nicks[nick];
+    }
+
+    void ServerState::addChannel(const std::string& name) {
+        auto it = this->channels.find(name);
+        if (it != this->channels.end()) {
+            throw StateException("Channel with given name has already exist");
+        }
+
+        this->channels[name] = std::make_unique<ChannelState>();
     }
 
     bool ServerState::doesChannelExist(const std::string& name) {
         return this->channels.find(name) != this->channels.end();
     }
 
-    ChannelState& ServerState::getChannel(const std::string& name) {
-        if (!this->doesChannelExist(name)) {
-            throw StateException("Channel does not exist");;
+    void ServerState::forChannel(const std::string& name, const std::function<void(const std::string&, ChannelState&)>& cb) {
+        auto it = this->channels.find(name);
+        if (it == this->channels.end()) {
+            throw StateException("Channel with given name does not exist");
         }
 
-        return *this->channels[name];
+        auto& ptr = this->channels[name];
+        cb(name, *ptr);
     }
 
-    void ServerState::createChannel(const std::string& name) {
-        if (this->doesChannelExist(name)) {
-            throw StateException("Channel has already exist");
+    void ServerState::forallChannels(const std::function<void(const std::string&, ChannelState&)>& cb) {
+        for (auto& [name, ptr] : this->channels) {
+            cb(name, *ptr);
+        }
+    }
+
+    void ServerState::deleteChannel(const std::string& name) {
+        auto it = this->channels.find(name);
+        if (it == this->channels.end()) {
+            throw StateException("Channel with given name does not exist");
+        }
+        auto& ptr = this->channels[name];
+        auto& channel = *ptr;
+
+        auto participants = channel.getParticipants();
+        for (auto participant : participants) {
+            this->users[participant]->_leaveChannel(name);
         }
 
-        this->channels[name] = std::make_unique<ChannelState>(*this);
+        this->channels.erase(it);
     }
 
-    responses::BroadcastRespondent ServerState::getBroadcastRespondent(UserState& sender, bool includeYourself) const {
+    responses::BroadcastRespondent ServerState::getServerBroadcastRespondent(int senderDescriptor, bool includeSender) {
         std::vector<network::TcpSocket*> sockets;
         for (const auto& userPtr : this->users) {
             if (userPtr) {
-                if (includeYourself || userPtr->getDescriptor() != sender.getDescriptor()) {
+                if (includeSender || userPtr->getDescriptor() != senderDescriptor) {
                     sockets.push_back(&userPtr->getSocket());
                 }
+            }
+        }
+
+        auto& ptr = this->users[senderDescriptor];
+        auto& sender = *ptr;
+
+        return responses::BroadcastRespondent(
+            responses::BroadcastResponseGenerator(sender.getUserPrefix()),
+            std::move(sockets)
+        );
+    }
+    
+    responses::BroadcastRespondent ServerState::getChannelBroadcastRespondent(int senderDescriptor, const std::string& channelName, bool includeYourself) {
+        auto& sender = *this->users[senderDescriptor];
+        auto& channel = *this->channels[channelName];
+        auto channelParticipants = channel.getParticipants();
+
+        std::vector<network::TcpSocket*> sockets;
+        for (auto participantDescriptor : channelParticipants) {
+            if (includeYourself || participantDescriptor != senderDescriptor) {
+                auto& user = *this->users[participantDescriptor];
+                sockets.push_back(&user.getSocket());
             }
         }
 

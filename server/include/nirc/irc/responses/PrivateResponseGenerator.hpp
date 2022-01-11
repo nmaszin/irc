@@ -13,8 +13,8 @@ namespace nirc::irc::responses {
     class PrivateResponseGenerator {
     public:
         PrivateResponseGenerator(
-            const message::Prefix& prefix,
-            const std::optional<std::string>& recipientNick
+            const message::ServerPrefix& prefix,
+            const state::UserState& userState
         );
 
         template <Response type, typename... Args>
@@ -36,7 +36,7 @@ namespace nirc::irc::responses {
         template <Response type, typename... Args>
         std::vector<std::string> args(Args... args);
 
-        const message::Prefix& prefix;
-        const std::optional<std::string>& recipientNick;
+        const message::ServerPrefix& prefix;
+        const state::UserState& userState;
     };
 }

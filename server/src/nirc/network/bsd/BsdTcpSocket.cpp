@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <mutex>
 #include <iostream>
 #include <unistd.h>
 #include <nirc/network/TcpException.hpp>
@@ -29,6 +30,8 @@ namespace nirc::network::bsd {
     }
 
     void BsdTcpSocket::send(const std::string& message) {
+        std::lock_guard<std::mutex> guard(this->mutex);
+
         std::size_t totalSentChars = 0;
         while (totalSentChars < message.size()) {
             std::size_t count = message.size() - totalSentChars;
@@ -48,8 +51,9 @@ namespace nirc::network::bsd {
     }
 
     std::string BsdTcpSocket::receiveUntil(const std::string& delimiter) {
-        std::string result;
+        std::lock_guard<std::mutex> guard(this->mutex);
 
+        std::string result;
         while (true) {
             if (this->read_start_index < this->read_end_index) {
                 auto index = this->read_buffer.find(delimiter, this->read_start_index);

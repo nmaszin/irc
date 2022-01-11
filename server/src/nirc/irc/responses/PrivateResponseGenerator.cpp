@@ -12,17 +12,18 @@
 
 namespace nirc::irc::responses {
     PrivateResponseGenerator::PrivateResponseGenerator(
-        const message::Prefix& prefix,
-        const std::optional<std::string>& recipientNick
+        const message::ServerPrefix& prefix,
+        const state::UserState& userState
     ) :
-        prefix(std::move(prefix)),
-        recipientNick(recipientNick)
+        prefix(prefix),
+        userState(userState)
     {}
 
 
     std::string PrivateResponseGenerator::getNickArgument() const {
-        if (this->recipientNick) {
-            return *this->recipientNick;
+        auto nick = this->userState.getNick();
+        if (nick) {
+            return *nick;
         } else {
             return "*";
         }

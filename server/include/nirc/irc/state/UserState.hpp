@@ -5,6 +5,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <optional>
+#include <functional>
 #include <nirc/irc/message/Prefix.hpp>
 #include <nirc/irc/state/StateException.hpp>
 #include <nirc/network/TcpSocket.hpp>
@@ -14,56 +15,50 @@ namespace nirc::irc::state {
     class ServerState;
 
     class UserState {
+        friend class ServerState;
     public:
         UserState(
-            ServerState& serverState,
             std::unique_ptr<network::TcpSocket>&& socket,
+            const message::ServerPrefix& serverPrefix,
             int descriptor
         );
-
-        void setNick(const std::string& nick);
-        const std::string& getNick() const;
-        std::string getNickArgument() const;
+        int getDescriptor() const;
 
         void setUsername(const std::string& nick);
-        const std::string& getUsername() const;
-
         void setHostname(const std::string& nick);
-        const std::string& getHostname() const;
-
         void setServername(const std::string& nick);
-        const std::string& getServername() const;
-
         void setRealname(const std::string& nick);
-        const std::string& getRealname() const;
 
-        network::TcpSocket& getSocket();
-        ServerState& getServerState();
+        // I consider copying data better than (at this concrete example)
+        // any more complicated method for ensuring data will be thread-safe
+        std::optional<std::string> getNick() const;
+        std::optional<std::string> getUsername() const;
+        std::optional<std::string> getHostname() const;
+        std::optional<std::string> getServername() const;
+        std::optional<std::string> getRealname() const;
+        std::vector<std::string> getChannels() const;
+
         int getDescriptor() const;
         std::unique_ptr<message::Prefix> getUserPrefix() const;
-
-        bool operator==(const UserState& other) const;
-        bool operator!=(const UserState& other) const;
-
+        network::TcpSocket& getSocket();
         responses::PrivateRespondent& getPrivateRespondent();
 
-        mutable std::shared_mutex mutex;
+        void _setNick(const std::string& nick);
+        void _joinChannel(const std::string& name);
+        void _leaveChannel(const std::string& name);
 
     protected:
-        friend class ServerState;
-
-        int descriptor;
-        ServerState& serverState;
         std::unique_ptr<network::TcpSocket> socket;
-
+        int descriptor;
         responses::PrivateRespondent privateRespondent;
 
-        std::optional<std::string> nick; // Assign only by setNick to preserve data consistency
+        std::optional<std::string> nick;
         std::optional<std::string> username;
         std::optional<std::string> hostname;
         std::optional<std::string> servername;
         std::optional<std::string> realname;
-
         std::vector<std::string> channels;
+
+        mutable std::shared_mutex mutex;
     };
 }

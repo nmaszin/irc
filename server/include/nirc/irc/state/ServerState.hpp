@@ -17,38 +17,37 @@ namespace nirc::irc::state {
     class ServerState {
     public:
         ServerState(const cli::Options& options);
-
-        UserState& addUser(std::unique_ptr<network::TcpSocket>&& socket);
-        UserState& getUserByDescriptor(int descriptor);
-        int getUserDescriptorByNick(const std::string& nick);
-        void freeUser(UserState& state);
-
         const cli::Options& getOptions() const;
         const message::Prefix& getServerPrefix() const;
-        std::vector<std::unique_ptr<UserState>>& getUsers();
-        std::unordered_map<std::string, std::unique_ptr<ChannelState>>& getChannels();
 
-        bool isOn(const std::string& nick);
+        int addUser(std::unique_ptr<network::TcpSocket>&& socket);
+        void forUser(int descriptor, const std::function<void(UserState&)>& cb);
+        void forallUsers(const std::function<void(UserState&)>& cb);
+        void deleteUser(int descriptor);
 
-        void createChannel(const std::string& name);
+        bool isOnServer(const std::string& nick);
+        void setUserNick(int descriptor, const std::string& nick);
+        int getUserDescriptor(const std::string& nick);
+
+        void addChannel(const std::string& name);
         bool doesChannelExist(const std::string& name);
-        ChannelState& getChannel(const std::string& name);
+        void forChannel(const std::string& name, const std::function<void(const std::string&, ChannelState&)>& cb);
+        void forallChannels(const std::function<void(const std::string&, ChannelState&)>& cb);
         void deleteChannel(const std::string& name);
 
-        responses::BroadcastRespondent getBroadcastRespondent(UserState& sender, bool includeYourself=false) const;
-
-        mutable std::shared_mutex nicksMutex;
-        mutable std::shared_mutex userAllocationMutex;
-        mutable std::shared_mutex channelsMutex;
+        responses::BroadcastRespondent getServerBroadcastRespondent(int senderDescriptor, bool includeYourself=false);
+        responses::BroadcastRespondent getChannelBroadcastRespondent(int senderDescriptor, const std::string& channelName, bool includeYourself=false);
 
     protected:
-        friend class UserState;
-
         const cli::Options& options;
         message::ServerPrefix prefix;
 
         std::vector<std::unique_ptr<UserState>> users;
         std::unordered_map<std::string, int> nicks;
         std::unordered_map<std::string, std::unique_ptr<ChannelState>> channels;
+
+        mutable std::shared_mutex nicksMutex;
+        mutable std::shared_mutex userAllocationMutex;
+        mutable std::shared_mutex channelsMutex;
     };
 }

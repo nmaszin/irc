@@ -5,6 +5,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <vector>
+#include <regex>
 #include <unordered_map>
 #include <nirc/cli/Options.hpp>
 #include <nirc/irc/message/Prefix.hpp>
@@ -91,6 +92,10 @@ namespace nirc::irc::state {
     }
 
     void ServerState::setUserNick(int descriptor, const std::string& nick) {
+        if (!std::regex_match(nick, std::regex(R"([A-Za-z0-9\-]+)"))) {
+            throw StateException("Invalid nick");
+        }
+
         std::lock_guard<std::shared_mutex>(this->usersMutex);
         auto& user = this->_getUser(descriptor);
 
@@ -120,6 +125,10 @@ namespace nirc::irc::state {
     }
 
     void ServerState::addChannel(const std::string& name) {
+        if (!std::regex_match(name, std::regex(R"(#[A-Za-z0-9_-]+)"))) {
+            throw StateException("Invalid channel name");
+        }
+
         std::lock_guard<std::shared_mutex>(this->channelsMutex);
         auto it = this->channels.find(name);
         if (it != this->channels.end()) {

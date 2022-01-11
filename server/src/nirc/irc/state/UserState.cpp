@@ -1,6 +1,7 @@
 #include <set>
 #include <string>
 #include <memory>
+#include <regex>
 #include <mutex>
 #include <optional>
 #include <vector>
@@ -43,21 +44,37 @@ namespace nirc::irc::state {
     }
 
     void UserState::setUsername(const std::string& username) {
+        if (!std::regex_match(username, std::regex(R"([A-Za-z0-9_\-\*]+)"))) {
+            throw StateException("Invalid username");
+        }
+
         std::lock_guard<std::shared_mutex> guard(this->mutex);
         this->username = username;
     }
 
     void UserState::setHostname(const std::string& hostname) {
+        if (!std::regex_match(hostname, std::regex(R"([A-Za-z0-9_\-\*]+)"))) {
+            throw StateException("Invalid hostname");
+        }
+
         std::lock_guard<std::shared_mutex> guard(this->mutex);
         this->hostname = hostname;
     }
 
     void UserState::setServername(const std::string& servername) {
+        if (!std::regex_match(servername, std::regex(R"([A-Za-z0-9_\-\*]+)"))) {
+            throw StateException("Invalid servername");
+        }
+
         std::lock_guard<std::shared_mutex> guard(this->mutex);
         this->servername = servername;
     }
 
     void UserState::setRealname(const std::string& realname) {
+        if (!std::regex_match(realname, std::regex(R"([A-Za-z0-9_\-\*]+)"))) {
+            throw StateException("Invalid realname");
+        }
+
         std::lock_guard<std::shared_mutex> guard(this->mutex);
         this->realname = realname;
     }

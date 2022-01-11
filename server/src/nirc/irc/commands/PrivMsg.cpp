@@ -43,7 +43,8 @@ namespace nirc::irc::commands {
 
             auto recipientDescriptor = serverState.getUserDescriptor(recipient);
             auto& socket = serverState.getSocket(recipientDescriptor);
-            serverState.forUser(recipientDescriptor, [&](state::UserState& user) {
+
+            serverState.forUser(descriptor, [&](state::UserState& user) {
                 auto prefix = user.getUserPrefix();
                 socket.send(message::OutputIrcMessage(
                     prefix,

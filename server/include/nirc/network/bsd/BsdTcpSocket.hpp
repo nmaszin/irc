@@ -26,6 +26,7 @@ namespace nirc::network::bsd {
         std::string::size_type read_start_index = BUFFER_SIZE;
         std::string::size_type read_end_index = BUFFER_SIZE;
 
-        mutable std::mutex mutex;
+        mutable std::mutex readMutex;
+        mutable std::mutex writeMutex;
     };
 }

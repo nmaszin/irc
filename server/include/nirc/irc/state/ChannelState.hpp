@@ -16,6 +16,7 @@ namespace nirc::irc::state {
     public:
         bool isOn(int userDescriptor) const;
         bool isOperator(int userDescriptor) const;
+
         void promoteToOperator(int userDescriptor);
         void degradeFromOperator(int userDescriptor);
         void ban(const std::string& mask);
@@ -27,7 +28,6 @@ namespace nirc::irc::state {
 
         static bool isChannel(const std::string& identifier);
 
-
         bool _isBanned(int userDescriptor, const UserState& user) const;
         void _join(int userDescriptor);
         void _leave(int userDescriptor);
@@ -35,6 +35,7 @@ namespace nirc::irc::state {
     protected:
         bool _isOn(int userDescriptor) const;
         bool _isOperator(int userDescriptor) const;
+
         void _promoteToOperator(int userDescriptor);
         void _degradeFromOperator(int userDescriptor);
         void _ban(const std::string& mask);

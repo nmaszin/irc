@@ -70,14 +70,14 @@ namespace nirc::irc::message {
 
         if (exclamationMarkIndex != std::string::npos && atIndex != std::string::npos) {
             nick = std::string(text.begin(), text.begin() + exclamationMarkIndex);
-            username = std::string(text.begin() + exclamationMarkIndex, text.begin() + atIndex);
-            hostname = std::string(text.begin() + atIndex, text.end());
+            username = std::string(text.begin() + exclamationMarkIndex + 1, text.begin() + atIndex);
+            hostname = std::string(text.begin() + atIndex + 1, text.end());
         } else if (exclamationMarkIndex != std::string::npos && atIndex == std::string::npos) {
             nick = std::string(text.begin(), text.begin() + exclamationMarkIndex);
-            username = std::string(text.begin() + exclamationMarkIndex, text.end());
+            username = std::string(text.begin() + exclamationMarkIndex + 1, text.end());
         } else if (exclamationMarkIndex == std::string::npos && atIndex != std::string::npos) {
             nick = std::string(text.begin(), text.begin() + atIndex);
-            hostname = std::string(text.begin() + atIndex, text.end());
+            hostname = std::string(text.begin() + atIndex + 1, text.end());
         } else if (exclamationMarkIndex == std::string::npos && atIndex == std::string::npos) {
             nick = text;
         }

@@ -30,7 +30,7 @@ namespace nirc::network::bsd {
     }
 
     void BsdTcpSocket::send(const std::string& message) {
-        std::lock_guard<std::mutex> guard(this->mutex);
+        std::lock_guard<std::mutex> guard(this->writeMutex);
 
         std::size_t totalSentChars = 0;
         while (totalSentChars < message.size()) {
@@ -51,7 +51,7 @@ namespace nirc::network::bsd {
     }
 
     std::string BsdTcpSocket::receiveUntil(const std::string& delimiter) {
-        std::lock_guard<std::mutex> guard(this->mutex);
+        std::lock_guard<std::mutex> guard(this->readMutex);
 
         std::string result;
         while (true) {

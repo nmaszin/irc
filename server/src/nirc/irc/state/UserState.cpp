@@ -87,6 +87,11 @@ namespace nirc::irc::state {
         return this->realname;
     }
 
+    std::string UserState::getRealHostname() const {
+        std::shared_lock<std::shared_mutex> guard(this->mutex);
+        return this->socket->getInfo().getHostname();
+    }
+
     std::vector<std::string> UserState::getChannels() const {
         std::shared_lock<std::shared_mutex> guard(this->mutex);
         return this->channels;

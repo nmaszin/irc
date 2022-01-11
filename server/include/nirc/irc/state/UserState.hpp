@@ -36,6 +36,7 @@ namespace nirc::irc::state {
         std::optional<std::string> getHostname() const;
         std::optional<std::string> getServername() const;
         std::optional<std::string> getRealname() const;
+        std::string getRealHostname() const;
         std::vector<std::string> getChannels() const;
 
         message::UserPrefix getUserPrefix() const;

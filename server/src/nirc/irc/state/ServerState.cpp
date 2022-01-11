@@ -62,9 +62,8 @@ namespace nirc::irc::state {
     void ServerState::deleteUser(int descriptor) {
         std::lock_guard<std::shared_mutex>(this->usersMutex);
         auto& user = this->_getUser(descriptor);
-
         {
-            std::shared_lock<std::shared_mutex>(this->usersMutex);
+            std::shared_lock<std::shared_mutex>(this->channelsMutex);
             auto userChannels = user.getChannels();
             for (const auto& channel : userChannels) {
                 this->channels[channel]->_leave(descriptor);

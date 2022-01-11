@@ -64,12 +64,17 @@ namespace nirc::irc::state {
         
         for (const auto& mask : this->bans) {
             auto prefix = message::UserPrefix::fromString(mask);
+            std::cout << "[DBG] " << mask << "\n";
+            std::cout << "[DBG] " << prefix.getNick() << "!" << *prefix.getUsername() << "@" << *prefix.getHostname() << "\n";
+
+            std::cout << "Comparing " << prefix.getNick() << " and " << *userState.getNick() << "\n";
             if (prefix.getNick() != "*" && prefix.getNick() != userState.getNick()) {
                 continue;
             }
 
             if (prefix.getUsername()) {
                 auto& username = *prefix.getUsername();
+                std::cout << "Comparing " << *prefix.getUsername() << " and " << *userState.getUsername() << "\n";
                 if (username != "*" && username != userState.getUsername()) {
                     continue;
                 }
@@ -77,7 +82,8 @@ namespace nirc::irc::state {
 
             if (prefix.getHostname()) {
                 auto& hostname = *prefix.getHostname();
-                if (hostname != "*" && hostname != userState.getHostname()) {
+                std::cout << "Comparing " << *prefix.getHostname() << " and " << userState.getRealHostname() << "\n";
+                if (hostname != "*" && hostname != userState.getRealHostname()) {
                     continue;
                 }
             }
@@ -111,7 +117,6 @@ namespace nirc::irc::state {
             throw StateException("User has not joined to channel");
         }
         this->participants.erase(it);
-        // TODO: userstate._leaveChannel
     }
 
     bool ChannelState::_isOn(int userDescriptor) const {

@@ -7,9 +7,13 @@ namespace nirc::cli {
 	public:
 		Options(int argc, char *argv[]);
 		int getPortNumber() const;
+		int getMaxClientsNumber() const;
+		const std::string& getHostname() const;
 
 	private:
+		std::string hostname;
 		int portNumber;
+		int maxClientsNumber = 10;
 	};
 }
 

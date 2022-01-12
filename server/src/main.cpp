@@ -4,12 +4,12 @@
 #include <nirc/cli/Options.hpp>
 #include <nirc/cli/InvalidOptionsException.hpp>
 #include <nirc/network/TcpException.hpp>
-#include <nirc/IrcServer.hpp>
+#include <nirc/irc/IrcServer.hpp>
 
 int main(int argc, char *argv[]) {
 	try {
 		nirc::cli::Options options(argc, argv);
-		nirc::IrcServer server(options);
+		nirc::irc::IrcServer server(options);
 		server.run();
 	} catch (const nirc::cli::InvalidOptionsException& e) {
 		std::cerr << "Incorrect usage!\n";

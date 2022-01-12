@@ -4,12 +4,13 @@
 
 namespace nirc::cli {
 	Options::Options(int argc, char *argv[]) {
-		if (argc != 2) {
-			throw InvalidOptionsException(std::string("Usage: ") + argv[0] + " <port>");
+		if (argc != 3) {
+			throw InvalidOptionsException(std::string("Usage: ") + argv[0] + " <hostname> <port>");
 		}
 
 		try {
-			this->portNumber = std::stoi(argv[1]);
+			this->hostname = argv[1];
+			this->portNumber = std::stoi(argv[2]);
 			if (this->portNumber < 1024 || this->portNumber > 65535) {
 				throw std::out_of_range("Not a valid port number");
 			}
@@ -24,6 +25,14 @@ namespace nirc::cli {
 
 	int Options::getPortNumber() const {
 		return this->portNumber;
+	}
+
+	int Options::getMaxClientsNumber() const {
+		return this->maxClientsNumber;
+	}
+
+	const std::string& Options::getHostname() const {
+		return this->hostname;
 	}
 }
 

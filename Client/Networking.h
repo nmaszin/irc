@@ -1,30 +1,40 @@
 #ifndef NETWORKING_H
 #define NETWORKING_H
 
-#include <QTcpSocket>
+#include <thread>
+#include <memory>
+#include <list>
+#include <string>
+#include <mutex>
+#include <queue>
+#include <unordered_map>
+#include <QString>
+#include "IrcSocket.h"
 
 class Network : public QObject
 {
     Q_OBJECT
 
     private:
-        QTcpSocket *socket;
+        struct Common {
+            std::mutex mutex;
+            std::queue<QString> dataToSend;
+        };
+
+        std::unordered_map<std::string, Common> common;
+        std::unordered_map<std::string, std::thread> threads;
 
     public:
         Network(QObject *parent);
-        void connectSocket(QString const &name, const qint64 port);
-        void disconnectSocket();
-        bool isSocketConnected();
-        QString readSocketData();
-        void writeSocketData(QString const &data);
 
-    public slots:
-        void readyToRead();
-        void disconnected();
+        bool connectToServer(QString const &identifier, QString const &host, const qint64 port);
+        void sendCommandToServer(QString const &identifier, QString const &command);
+        void disconnectFromServer(QString const &identifier);
 
     signals:
-        void availableDisconnect();
-        void accessReadyToRead();
+        void couldNotConnect(QString const& identifier);
+        void newCommandAvailable(QString const& identifier, QString const& data);
+        void disconnected(QString const& identifier);
 };
 
 #endif

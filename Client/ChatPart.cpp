@@ -1,10 +1,10 @@
 #include "ChatPart.h"
 
-ChatPart::ChatPart(const QString &name, const qint64 type, QWidget *parent) : QTableWidget(parent)
+ChatPart::ChatPart(const QString &name, Type type, QWidget *parent) :
+    QTableWidget(parent),
+    chatName(name),
+    chatType(type)
 {
-    chatName = name;
-    chatType = type;
-
     QHeaderView *verticalView = new QHeaderView(Qt::Vertical);
     verticalView->setSectionResizeMode(QHeaderView::ResizeToContents);
     verticalView = verticalHeader();
@@ -20,7 +20,6 @@ ChatPart::ChatPart(const QString &name, const qint64 type, QWidget *parent) : QT
     horizontalHeader()->hide();
     verticalHeader()->hide();
 
-
     setEditTriggers(QAbstractItemView::NoEditTriggers);
     setColumnCount(2);
     setWordWrap(true);
@@ -32,7 +31,6 @@ void ChatPart::addMessage(const QString &message)
     QString output = time.toString();
 
     int rows = rowCount();
-    insertRow(rows);
     setItem(rows, 1, new QTableWidgetItem(message));
     setItem(rows, 0, new QTableWidgetItem(output));
     resizeColumnToContents(0);

@@ -1,56 +1,55 @@
+#include <thread>
 #include "Networking.h"
 
 Network::Network(QObject *parent) : QObject(parent)
 {
-    socket = new QTcpSocket(this);
-    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
 }
 
-void Network::connectSocket(const QString &name, const qint64 port)
-{
-    socket->connectToHost(name, port);
-    socket->waitForConnected(5000);
-    connect(socket, SIGNAL(readyToRead()), this, SLOT(readyToRead()));
-}
+bool Network::connectToServer(const QString &identifier, const QString &host, const qint64 port) {
+    try {
+        auto id = identifier.toStdString();
+        auto socket = std::make_unique<IrcSocket>(host, port);
+        this->threads[id] = std::thread([&](const QString& identifier, std::unique_ptr<IrcSocket>&& socket, Common& common) {
+            try {
+                while (true) {
+                    {
+                        std::lock_guard<std::mutex>(common.mutex);
+                        if (!common.dataToSend.empty()) {
+                            auto command = common.dataToSend.front();
+                            qInfo() << "Send " << command << "\n";
+                            socket->sendCommand(command);
+                            common.dataToSend.pop();
+                        }
+                    }
 
-void Network::disconnectSocket()
-{
-    socket->abort();
-    disconnect(socket, SIGNAL(readyToRead()), this, SLOT(readyToRead()));
-    emit availableDisconnect();
-}
+                    if (socket->anyDataToReceive()) {
+                        QString command = socket->receiveCommand();
+                        if (!command.isEmpty()) {
+                            emit newCommandAvailable(identifier, command);
+                        }
+                    }
+                }
+            } catch (const IrcSocketException& e) {
+                this->disconnectFromServer(identifier);
+            }
+        }, identifier, std::move(socket), std::ref(common[id]));
+        return true;
 
-bool Network::isSocketConnected()
-{
-    return (socket->state() == QTcpSocket::ConnectedState);
-}
-
-QString Network::readSocketData()
-{
-    QString data;
-    if(isSocketConnected())
-    {
-        data = socket->readAll();
+    }  catch (const IrcSocketException& e) {
+        emit couldNotConnect(identifier);
     }
-    return data;
+
+    return false;
 }
 
-void Network::writeSocketData(const QString &data)
-{
-    if(isSocketConnected())
-    {
-        QString line = data;
-        line.append("\r\n");
-        socket->write(line.toUtf8());
-    }
+void Network::sendCommandToServer(const QString &identifier, const QString &command) {
+    auto& c = common[identifier.toStdString()];
+    std::lock_guard<std::mutex>(c.mutex);
+    c.dataToSend.push(command);
 }
 
-void Network::readyToRead()
-{
-    emit accessReadyToRead();
-}
-
-void Network::disconnected()
-{
-    emit availableDisconnect();
+void Network::disconnectFromServer(QString const &identifier) {
+    auto id = identifier.toStdString();
+    common.erase(common.find(id));
+    emit disconnected(identifier);
 }

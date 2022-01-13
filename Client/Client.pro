@@ -9,31 +9,22 @@ TEMPLATE = app
 CONFIG += c++17
 
 SOURCES +=  main.cpp\
+            Client.cpp \
             ChannelState.cpp \
             ChatPart.cpp \
-            Client.cpp \
             ConnectDialog.cpp \
-            InputParse.cpp \
             IrcSocket.cpp \
-            Networking.cpp \
-            OutputIrcMessage.cpp \
-            OutputParse.cpp \
             ServerState.cpp
 
 HEADERS  += Client.h \
             ChannelState.h \
             ChatPart.h \
             ConnectDialog.h \
-            InputParse.h \
             IrcSocket.h \
-            Networking.h \
-            OutputIrcMessage.h \
-            OutputParse.h \
-            ServerState.h \
-            utils.h
+            ServerState.h
 
 FORMS    += Client.ui \
-    ConnectDialog.ui
+            ConnectDialog.ui
 
 RESOURCES += \
               app.qrc

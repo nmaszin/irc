@@ -1,9 +1,6 @@
 #include <QDebug>
 #include <optional>
-#include "utils.h"
 #include "Client.h"
-#include "OutputIrcMessage.h"
-
 
 void Client::Connect()
 {
@@ -13,37 +10,37 @@ void Client::Connect()
         QString server = dialog->getServerName();
         qint64 port = dialog->getServerPort();
         QString nick = dialog->getNickName();
-        QString identifier = QString("%1/%2").arg(server, QString::number(port));
-
-        if (networkHandler->connectToServer(identifier, server, port)) {
-            addServer(identifier);
-            networkHandler->sendCommandToServer(identifier, QString("NICK %1").arg(nick));
-            // TODO: odebrać odpowiedź i sprawdzić, czy nick nie jest zajęty
-            networkHandler->sendCommandToServer(identifier, QString("USER %1 %2 %3 :%4").arg(nick, nick, nick, nick));
-        }
+        addServer(server, port, nick);
     }
+}
+
+void Client::CouldNotConnect(ServerState* server)
+{
+    qInfo() << "Nie udało się połączyć z " << server->getIdentifier() << "\n";
+}
+
+void Client::Disconnected(ServerState *server)
+{
+    qInfo() << "Disconnected " << server->getIdentifier() << "\n";
+    removeServer(index);
 }
 
 void Client::DisconnectCurrentServer()
 {
-    if (this->currentServerIdentifier) {
-        Disconnected(*this->currentServerIdentifier);
-        this->networkHandler->disconnectFromServer(*this->currentServerIdentifier);
+    if (this->currentServerIndex) {
+        DisconnectServer(*this->currentServerIndex);
     } else {
         qInfo("Żaden serwer nie został wybrany");
     }
 }
 
-void Client::CouldNotConnect(const QString& identifier)
+void Client::DisconnectServer(int index)
 {
-    qInfo() << "Nie udało się połączyć z " << identifier << "\n";
+    Disconnected(index);
+    this->networkHandler->disconnectFromServer(index);
 }
 
-void Client::Disconnected(const QString& identifier)
-{
-    qInfo() << identifier << "disconnected\n";
-    removeServer(identifier);
-}
+
 
 void Client::Exit()
 {
@@ -104,70 +101,118 @@ void Client::ChangeUserItem(const int index)
     addChatPart(name, USER_TYPE);*/
 }
 
-void Client::HandleCommandFromServer(QString const& identifier, QString const& command)
+void Client::HandleCommandFromServer(int index, QString const& command)
 {
-    qInfo() << identifier << " send " << command;
+    qInfo() << index << " send " << command;
 }
 
 void Client::HandleUserInput()
 {
+    if (!this->currentServerIndex) {
+        // Skoro żaden serwer nie jest wybrany, to nie powinno być możliwe wysłanie jakiejkolwiek komendy
+        qInfo("Ups!");
+        return;
+    }
+
+    ServerState *currentServer = this->servers[*this->currentServerIndex];
+
     QString l = lineEditMessage->text();
     lineEditMessage->clear();
     if(!l.isEmpty())
     {
         auto parts = l.split(" ");
+
         if (parts[0] == "/join") {
             auto channelName = parts[1];
-            networkHandler->sendCommandToServer(*currentServerIdentifier, "JOIN " + channelName);
-            this->currentChannel = QString(channelName);
+            networkHandler->sendCommandToServer(*this->currentServerIndex, "JOIN " + channelName);
+            // this->currentChannel = QString(channelName);
         } else if (parts[0] == "/quit") {
             auto quitMessage = parts.mid(1).join(" ");
-            networkHandler->sendCommandToServer(*currentServerIdentifier, "QUIT :" + quitMessage);
-        } else if (parts[0] == "/topic") {
-            auto topicMessage = parts.mid(1).join(" ");
-            networkHandler->sendCommandToServer(*currentServerIdentifier, (QString("TOPIC %1 %2:").arg(*currentChannel, topicMessage)));
-        } else if (parts[0] == "/op") {
-            auto nick = parts[1];
-            networkHandler->sendCommandToServer(*currentServerIdentifier, (QString("MODE %1 +o %2").arg(*currentChannel, nick)));
-        } else if (parts[0] == "/deop") {
-            auto nick = parts[1];
-            networkHandler->sendCommandToServer(*currentServerIdentifier, (QString("MODE %1 -o %2").arg(*currentChannel, nick)));
-        } else if (parts[0] == "/kick") {
-            auto nick = parts[1];
-            auto message = parts.mid(2).join(" ");
-            networkHandler->sendCommandToServer(*currentServerIdentifier, (QString("KICK %1 %2 :%3").arg(*currentChannel, nick, message)));
-        } else if (parts[0] == "/part") {
-            auto message = parts.mid(1).join(" ");
-            networkHandler->sendCommandToServer(*currentServerIdentifier, (QString("PART %1 :%2").arg(*currentChannel, message)));
-        } else if (parts[0] == "/msg") {
-            auto recipient = parts[1];
-            auto message = parts.mid(2).join(" ");
-            networkHandler->sendCommandToServer(*currentServerIdentifier, (QString("PRIVMSG %1 :%2").arg(recipient, message)));
+            networkHandler->sendCommandToServer(*this->currentServerIndex, "QUIT :" + quitMessage);
+        } else if (currentServer->hasAnyChannel()) {
+            ChannelState *currentChannel = currentServer->getCurrentChannel();
+            if (parts[0] == "/topic") {
+                auto topicMessage = parts.mid(1).join(" ");
+                networkHandler->sendCommandToServer(*this->currentServerIndex, (QString("TOPIC %1 %2:").arg(currentChannel->getName(), topicMessage)));
+            } else if (parts[0] == "/op") {
+                auto nick = parts[1];
+                networkHandler->sendCommandToServer(*this->currentServerIndex, (QString("MODE %1 +o %2").arg(currentChannel->getName(), nick)));
+            } else if (parts[0] == "/deop") {
+                auto nick = parts[1];
+                networkHandler->sendCommandToServer(*this->currentServerIndex, (QString("MODE %1 -o %2").arg(currentChannel->getName(), nick)));
+            } else if (parts[0] == "/kick") {
+                auto nick = parts[1];
+                auto message = parts.mid(2).join(" ");
+                networkHandler->sendCommandToServer(*this->currentServerIndex, (QString("KICK %1 %2 :%3").arg(currentChannel->getName(), nick, message)));
+            } else if (parts[0] == "/part") {
+                auto message = parts.mid(1).join(" ");
+                networkHandler->sendCommandToServer(*this->currentServerIndex, (QString("PART %1 :%2").arg(currentChannel->getName(), message)));
+            } else if (parts[0] == "/msg") {
+                auto recipient = parts[1];
+                auto message = parts.mid(2).join(" ");
+                networkHandler->sendCommandToServer(*this->currentServerIndex, (QString("PRIVMSG %1 :%2").arg(recipient, message)));
+            } else {
+                auto& message = l;
+                networkHandler->sendCommandToServer(*this->currentServerIndex, (QString("PRIVMSG %1 :%2").arg(currentChannel->getName(), message)));
+            }
         } else {
-            auto& message = l;
-            networkHandler->sendCommandToServer(*currentServerIdentifier, (QString("PRIVMSG %1 :%2").arg(*currentChannel, message)));
+            qInfo("Brak kanału");
         }
     }
 }
 
-void Client::addServer(const QString& identifier) {
+void Client::addServer(const QString& hostname, quint16 port, const QString& nick) {
     // TODO: check the same identifier
-    this->servers.push_back(identifier);
-    this->currentServerIdentifier = identifier;
-    this->addChatPart(identifier, ChatPart::Type::SERVER_TYPE);
-}
+    //this->servers.push_back(new ServerState(hostname, port, this));
+    this->currentServerIndex = this->servers.size() - 1;
+    ServerState *server = this->servers.back();
 
-void Client::removeServer(const QString& identifier) {
-    this->servers.removeOne(identifier);
-    if (this->servers.size() > 0) {
-        this->currentServerIdentifier = this->servers.last();
-    } else {
-        this->currentServerIdentifier = std::nullopt;
+    if (networkHandler->connectToServer(*this->currentServerIndex, hostname, port)) {
+        networkHandler->sendCommandToServer(*this->currentServerIndex, QString("NICK %1").arg(nick));
+        // TODO: odebrać odpowiedź i sprawdzić, czy nick nie jest zajęty
+        networkHandler->sendCommandToServer(*this->currentServerIndex, QString("USER %1 %2 %3 :%4").arg(nick, nick, nick, nick));
     }
 
-    auto index = this->getChatPartIdByName(identifier);
-    if (index != -1) {
-        this->removeChatPart(index);
+    ChatPart *widget = server->getChat();
+    stackedWidget->addWidget(widget);
+    listWidgetConnection->addItem(server->getIdentifier());
+    if (this->servers.size() == 1)
+    {
+        this->setView(true);
+        listWidgetConnection->setCurrentRow(0);
+    }
+}
+
+void Client::removeServer(int index) {
+    ServerState *server = this->servers[index];
+    ChatPart *widget = server->getChat();
+    stackedWidget->removeWidget(widget);
+
+    for (ChannelState *channel : server->getChannels()) {
+        ChatPart *widget = channel->getChat();
+        stackedWidget->removeWidget(widget);
+    }
+
+    this->servers.removeAt(index);
+    if (this->servers.size() > 0) {
+        this->currentServerIndex = this->servers.size() - 1;
+    } else {
+        this->currentServerIndex = std::nullopt;
+    }
+
+    listWidgetConnection->clear();
+    if (this->servers.size() == 0) {
+        this->setView(false);
+    } else {
+        for (ServerState *server : this->servers)
+        {
+            ChatPart *widget = server->getChat();
+            listWidgetConnection->addItem(widget->getName());
+            for (ChannelState *channel : server->getChannels()) {
+                ChatPart *widget = channel->getChat();
+                listWidgetConnection->addItem(widget->getName());
+            }
+        }
     }
 }
 
@@ -177,62 +222,14 @@ void Client::setView(bool anyServerOpened)
         lineEditMessage->setReadOnly(false);
         pushButtonSend->setEnabled(true);
     } else {
-        for (int index = 0; index < listChatPart.count(); index++)
-        {
-            removeChatPart(index);
-        }
-
         lineEditMessage->clear();
         lineEditMessage->setReadOnly(true);
         pushButtonSend->setEnabled(false);
         listWidgetConnection->clear();
         // listWidgetUser->clear();
-        listChatPart.clear();
     }
 }
 
-int Client::addChatPart(const QString &name, ChatPart::Type type)
-{
-    ChatPart *widget = new ChatPart(name, type, stackedWidget);
-
-    stackedWidget->addWidget(widget);
-    listChatPart.append(widget);
-    listWidgetConnection->addItem(name);
-
-    if (listChatPart.size() == 1)
-    {
-        setView(true);
-        listWidgetConnection->setCurrentRow(0);
-    }
-
-    return listChatPart.count() - 1;
-}
-
-void Client::removeChatPart(int index)
-{
-    ChatPart *removedChatPart = this->listChatPart[index];
-    stackedWidget->removeWidget(removedChatPart);
-    listChatPart.removeAt(index);
-    // listWidgetUser->clear();
-    listWidgetConnection->clear();
-
-    for(qint64 index = 0; index < listChatPart.count(); index++)
-    {
-        ChatPart *widget = listChatPart.at(index);
-        listWidgetConnection->addItem(widget->getName());
-    }
-}
-
-qint64 Client::getChatPartIdByName(const QString &name)
-{
-    for (qint64 index = 0; index < listChatPart.count(); index++) {
-        if (listChatPart[index]->getName() == name) {
-            return index;
-        }
-    }
-
-    return -1;
-}
 
 Client::Client(QWidget *parent) :
     QMainWindow(parent)
@@ -254,10 +251,12 @@ Client::Client(QWidget *parent) :
     connect(lineEditMessage, SIGNAL(returnPressed()), pushButtonSend, SLOT(click()));
     connect(pushButtonSend, SIGNAL(clicked()), this, SLOT(HandleUserInput()));
 
+    //connect(servers, SIGNAL(couldNotConnect(ServerState*)), this, SLOT(CouldNotConnect(ServerState*)));
+
     // Network
-    networkHandler = new Network(this);
-    connect(networkHandler, SIGNAL(couldNotConnect(QString)), this, SLOT(CouldNotConnect(QString)));
-    connect(networkHandler, SIGNAL(newCommandAvailable(QString, QString)), this, SLOT(HandleCommandFromServer(QString, QString)));
-    connect(networkHandler, SIGNAL(disconnected(QString)), this, SLOT(Disconnected(QString)));
+    //networkHandler = new Network(this);
+    //connect(networkHandler, SIGNAL(couldNotConnect(int)), this, SLOT(CouldNotConnect(int)));
+    //connect(networkHandler, SIGNAL(newCommandAvailable(int, QString)), this, SLOT(HandleCommandFromServer(int, QString)));
+    //connect(networkHandler, SIGNAL(disconnected(int)), this, SLOT(Disconnected(int)));
 }
 

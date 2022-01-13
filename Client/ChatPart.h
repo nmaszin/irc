@@ -15,7 +15,7 @@ class ChatPart : public QTableWidget
             USER_TYPE = 102
         };
 
-        ChatPart(QString const &name, Type type, QWidget *parent = 0);
+        ChatPart(QString const &name, Type type, QWidget *parent = nullptr);
 
         bool isUser() {
             return chatType == Type::USER_TYPE;

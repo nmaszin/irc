@@ -10,9 +10,7 @@
 #include <optional>
 
 #include "ui_Client.h"
-#include "Networking.h"
-#include "OutputParse.h"
-#include "InputParse.h"
+#include "ServerState.h"
 #include "ChatPart.h"
 #include "ConnectDialog.h"
 
@@ -22,46 +20,32 @@ class Client : public QMainWindow, public Ui_Client
 
     private slots:
         void Connect();
+
+        void CouldNotConnect(ServerState*);
+        void Disconnected(ServerState*);
         void DisconnectCurrentServer();
-        void CouldNotConnect(QString const& identifier);
-        void Disconnected(QString const& identifier);
+        void DisconnectServer(ServerState*);
+
         void Exit();
         void ShowUser();
         void ShowConnection();
         void About();
         void Help();
+
         void ChangeConnectionItem(const int index);
         void ChangeUserItem(const int index);
-        void HandleCommandFromServer(QString const& identifier, QString const& command);
+
+        void HandleCommandFromServer(int index, QString const& command);
         void HandleUserInput();
 
     private:
         Ui::Client *ui;
+        QList<ServerState*> servers;
+        std::optional<int> currentServerIndex = 0;
 
-        Network *networkHandler;
-        OutputParse OutputParseHandler;
-        InputParse parserInputHandler;
-        QList <ChatPart*> listChatPart;
-
-        QStringList servers;
-        std::optional<QString> currentServerIdentifier;
-        std::optional<QString> currentChannel;
-
-        void addServer(const QString& server);
-        void removeServer(const QString& server);
-        //void addChannelToServer(const QString& server, const QString& channel);
-        //void removeChannelFromServer(const QString& server, const QString& channel);
-
+        void addServer(const QString& hostname, quint16 port, const QString& nick);
+        void removeServer(int index);
         void setView(bool anyServerOpened);
-        qint64 getChatPartIdByName(QString const &name);
-        int addChatPart(QString const &identifier, ChatPart::Type type);
-        void removeChatPart(int index);
-
-
-
-
-        // void updateUserList(QString const &name, QStringList const &users);
-
     public:
         Client(QWidget *parent = 0);
 };

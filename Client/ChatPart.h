@@ -34,7 +34,9 @@ class ChatPart : public QTableWidget
             return chatType;
         }
 
-        void addMessage(QString const &message);
+        void addUserMessage(QString const& nick, QString const &message);
+
+        void addServerMessage(QString const &message);
 
     private:
         QString chatName;

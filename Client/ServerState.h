@@ -21,30 +21,25 @@ public:
     }
 
     bool hasAnyChannel() {
-        return static_cast<bool>(this->currentChannelIndex);
+        return this->currentChannel != nullptr;
     }
 
     ChannelState* getCurrentChannel() {
-        return this->channels[*this->currentChannelIndex];
+        return this->currentChannel;
     }
 
     void joinChannel(const QString& name) {
         if (!this->isParticipantOfChannel(name)) {
-            channels.push_back(new ChannelState(name, this));
+            this->channels[name] = new ChannelState(name, this);
         }
     }
 
     void leaveChannel(const QString& name) {
-        for (auto it = this->channels.begin(); it < this->channels.end(); it++) {
-            if ((*it)->getName() == name) {
-                this->channels.erase(it);
-                break;
-            }
-        }
+        this->channels.remove(name);
     }
 
     bool isParticipantOfChannel(const QString& name) {
-        for (const auto& channel : this->channels) {
+        for (ChannelState *channel : this->channels) {
             if (channel->getName() == name) {
                 return true;
             }
@@ -61,7 +56,7 @@ public:
         return this->serverChat;
     }
 
-    QList<ChannelState*>& getChannels() {
+    QMap<QString, ChannelState*>& getChannels() {
         return this->channels;
     }
 
@@ -78,8 +73,8 @@ protected:
     quint16 port;
 
     ChatPart *serverChat;
-    QList<ChannelState*> channels;
-    std::optional<int> currentChannelIndex;
+    QMap<QString, ChannelState*> channels;
+    ChannelState *currentChannel = nullptr;
 };
 
 #endif // SERVERSTATE_H

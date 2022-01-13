@@ -25,13 +25,27 @@ ChatPart::ChatPart(const QString &name, Type type, QWidget *parent) :
     setWordWrap(true);
 }
 
-void ChatPart::addMessage(const QString &message)
+void ChatPart::addUserMessage(const QString &nick, const QString &message)
 {
     QTime time = QTime::currentTime();
     QString output = time.toString();
+    QString text = QString("<%1> %2").arg(nick, message);
 
     int rows = rowCount();
-    setItem(rows, 1, new QTableWidgetItem(message));
+    setItem(rows, 1, new QTableWidgetItem(text));
     setItem(rows, 0, new QTableWidgetItem(output));
     resizeColumnToContents(0);
 }
+
+void ChatPart::addServerMessage(const QString &message)
+{
+    QTime time = QTime::currentTime();
+    QString output = time.toString();
+    QString text = QString("* %1").arg(message);
+
+    int rows = rowCount();
+    setItem(rows, 1, new QTableWidgetItem(text));
+    setItem(rows, 0, new QTableWidgetItem(output));
+    resizeColumnToContents(0);
+}
+

@@ -32,21 +32,30 @@ public:
     }
 
     void sendMessage(const QString& nick, const QString& message) {
-        channelChat->addMessage(QString("<%1> %2").arg(nick, message));
+        channelChat->addUserMessage(nick, message);
     }
 
     void sendNotification(const QString& message) {
-        channelChat->addMessage(QString("* %1").arg(message));
+        channelChat->addServerMessage(message);
     }
 
     ChatPart *getChat() {
         return this->channelChat;
     }
 
+    void setTopic(const QString& topic) {
+        this->topic = topic;
+    }
+
+    const QString& getTopic() const {
+        return this->topic;
+    }
+
 protected:
     QString name;
     ChatPart *channelChat;
     QStringList participants;
+    QString topic;
 };
 
 #endif // CHANNELSTATE_H

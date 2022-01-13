@@ -20,37 +20,6 @@ public:
     {
     }
 
-    bool connect() {
-        try {
-            this->socket = std::make_unique<IrcSocket>(hostname, port);
-            this->thread = std::thread([&]() {
-                try {
-                    while (true) {
-                        QString command = this->socket->receiveCommand();
-                        if (!command.isEmpty()) {
-                            emit newCommandAvailable(this, command);
-                        }
-                    }
-                } catch (const IrcSocketException& e) {
-                    this->disconnectFromServer(this);
-                }
-            });
-            return true;
-        }  catch (const IrcSocketException&) {
-            emit couldNotConnect(this);
-        }
-
-        return false;
-    }
-
-    void sendCommand(const QString& command) {
-        this->socket->sendCommand(command);
-    }
-
-    void disconnectFromServer() {
-        emit disconnected(this);
-    }
-
     bool hasAnyChannel() {
         return static_cast<bool>(this->currentChannelIndex);
     }
@@ -104,12 +73,6 @@ public:
         return this->port;
     }
 
-signals:
-    void couldNotConnect(ServerState*);
-    void disconnectFromServer(ServerState*);
-    void newCommandAvailable(ServerState*, const QString&);
-    void disconnected(ServerState*);
-
 protected:
     QString hostname;
     quint16 port;
@@ -117,9 +80,6 @@ protected:
     ChatPart *serverChat;
     QList<ChannelState*> channels;
     std::optional<int> currentChannelIndex;
-
-    std::thread thread;
-    std::unique_ptr<IrcSocket> socket;
 };
 
 #endif // SERVERSTATE_H

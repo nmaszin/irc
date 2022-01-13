@@ -13,6 +13,7 @@
 #include "ServerState.h"
 #include "ChatPart.h"
 #include "ConnectDialog.h"
+#include "Networking.h"
 
 class Client : public QMainWindow, public Ui_Client
 {
@@ -21,10 +22,9 @@ class Client : public QMainWindow, public Ui_Client
     private slots:
         void Connect();
 
-        void CouldNotConnect(ServerState*);
-        void Disconnected(ServerState*);
+        void Disconnected(int);
         void DisconnectCurrentServer();
-        void DisconnectServer(ServerState*);
+        void DisconnectServer(int);
 
         void Exit();
         void ShowUser();
@@ -40,11 +40,13 @@ class Client : public QMainWindow, public Ui_Client
 
     private:
         Ui::Client *ui;
+        Network *networkHandler;
         QList<ServerState*> servers;
         std::optional<int> currentServerIndex = 0;
 
         void addServer(const QString& hostname, quint16 port, const QString& nick);
         void removeServer(int index);
+        ServerState *getCurrentServer();
         void setView(bool anyServerOpened);
     public:
         Client(QWidget *parent = 0);

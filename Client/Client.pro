@@ -13,15 +13,19 @@ SOURCES +=  main.cpp\
             ChannelState.cpp \
             ChatPart.cpp \
             ConnectDialog.cpp \
+            InputMessage.cpp \
             IrcSocket.cpp \
-            ServerState.cpp
+            ServerState.cpp \
+            Networking.cpp
 
 HEADERS  += Client.h \
             ChannelState.h \
             ChatPart.h \
             ConnectDialog.h \
+            InputMessage.h \
             IrcSocket.h \
-            ServerState.h
+            ServerState.h \
+            Networking.h
 
 FORMS    += Client.ui \
             ConnectDialog.ui

@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <optional>
 #include "Client.h"
+#include "InputMessage.h"
 
 void Client::Connect()
 {
@@ -14,13 +15,9 @@ void Client::Connect()
     }
 }
 
-void Client::CouldNotConnect(ServerState* server)
+void Client::Disconnected(int index)
 {
-    qInfo() << "Nie udało się połączyć z " << server->getIdentifier() << "\n";
-}
-
-void Client::Disconnected(ServerState *server)
-{
+    ServerState *server = this->servers[index];
     qInfo() << "Disconnected " << server->getIdentifier() << "\n";
     removeServer(index);
 }
@@ -39,8 +36,6 @@ void Client::DisconnectServer(int index)
     Disconnected(index);
     this->networkHandler->disconnectFromServer(index);
 }
-
-
 
 void Client::Exit()
 {
@@ -162,36 +157,46 @@ void Client::HandleUserInput()
 }
 
 void Client::addServer(const QString& hostname, quint16 port, const QString& nick) {
-    // TODO: check the same identifier
-    //this->servers.push_back(new ServerState(hostname, port, this));
-    this->currentServerIndex = this->servers.size() - 1;
-    ServerState *server = this->servers.back();
+    int newIndex = this->servers.size();
+    if (networkHandler->connectToServer(newIndex, hostname, port)) {
+        ServerState *server = new ServerState(hostname, port, this);
+        this->servers.push_back(server);
+        this->currentServerIndex = newIndex;
 
-    if (networkHandler->connectToServer(*this->currentServerIndex, hostname, port)) {
         networkHandler->sendCommandToServer(*this->currentServerIndex, QString("NICK %1").arg(nick));
         // TODO: odebrać odpowiedź i sprawdzić, czy nick nie jest zajęty
         networkHandler->sendCommandToServer(*this->currentServerIndex, QString("USER %1 %2 %3 :%4").arg(nick, nick, nick, nick));
-    }
+        networkHandler->sendCommandToServer(*this->currentServerIndex, QString("JOIN #tescik"));
 
-    ChatPart *widget = server->getChat();
-    stackedWidget->addWidget(widget);
-    listWidgetConnection->addItem(server->getIdentifier());
-    if (this->servers.size() == 1)
-    {
-        this->setView(true);
-        listWidgetConnection->setCurrentRow(0);
+        ChatPart *widget = server->getChat();
+        stackedWidget->addWidget(widget);
+        listWidgetConnection->addItem(server->getIdentifier());
+
+        if (this->servers.size() == 1)
+        {
+            this->setView(true);
+            listWidgetConnection->setCurrentRow(0);
+        }
+    } else {
+        qInfo() << "Nie udało się połączyć z " << hostname << "/" << port << "\n";
     }
 }
 
 void Client::removeServer(int index) {
+
+
+    qInfo() << "A\n";
     ServerState *server = this->servers[index];
     ChatPart *widget = server->getChat();
     stackedWidget->removeWidget(widget);
+    qInfo() << "B\n";
 
     for (ChannelState *channel : server->getChannels()) {
         ChatPart *widget = channel->getChat();
         stackedWidget->removeWidget(widget);
     }
+
+    qInfo() << "C\n";
 
     this->servers.removeAt(index);
     if (this->servers.size() > 0) {
@@ -199,6 +204,8 @@ void Client::removeServer(int index) {
     } else {
         this->currentServerIndex = std::nullopt;
     }
+
+    qInfo() << "D\n";
 
     listWidgetConnection->clear();
     if (this->servers.size() == 0) {
@@ -214,6 +221,10 @@ void Client::removeServer(int index) {
             }
         }
     }
+}
+
+ServerState* Client::getCurrentServer() {
+    return this->servers[*this->currentServerIndex];
 }
 
 void Client::setView(bool anyServerOpened)
@@ -232,11 +243,31 @@ void Client::setView(bool anyServerOpened)
 
 
 Client::Client(QWidget *parent) :
-    QMainWindow(parent)
+    QMainWindow(parent),
+    networkHandler(new Network(this))
 {
     // Interface
     setupUi(this);
     setView(false);
+
+    InputMessage msg(":eryk!gigant@localhost             PRIVMSG            #dup s d  ds      :asdsfsfsafsfasdasfasfsf da sd asda sd");
+    const auto& prefix = msg.getPrefix();
+    if (prefix.getType() == Prefix::Type::Client) {
+        ClientPrefix& clientPrefix = (ClientPrefix&)prefix;
+        qInfo() << "Nick: " << clientPrefix.getNick() << "\n";
+        qInfo() << "User: " << clientPrefix.getUser() << "\n";
+        qInfo() << "Hostname: " << clientPrefix.getHostname() << "\n";
+    } else {
+        ServerPrefix& serverPrefix = (ServerPrefix&)prefix;
+        qInfo() << "Hostname: " << serverPrefix.getHostname() << "\n";
+    }
+
+    qInfo() << "Command: " << msg.getCommand() << "\n";
+    auto& args = msg.getArguments();
+    for (int i = 0; i < args.size(); i++) {
+        qInfo() << "Arg: " << args[i] << "\n";
+    }
+
 
     // Connections
     connect(connectAction, SIGNAL(triggered()), this, SLOT(Connect()));
@@ -251,12 +282,8 @@ Client::Client(QWidget *parent) :
     connect(lineEditMessage, SIGNAL(returnPressed()), pushButtonSend, SLOT(click()));
     connect(pushButtonSend, SIGNAL(clicked()), this, SLOT(HandleUserInput()));
 
-    //connect(servers, SIGNAL(couldNotConnect(ServerState*)), this, SLOT(CouldNotConnect(ServerState*)));
-
     // Network
-    //networkHandler = new Network(this);
-    //connect(networkHandler, SIGNAL(couldNotConnect(int)), this, SLOT(CouldNotConnect(int)));
-    //connect(networkHandler, SIGNAL(newCommandAvailable(int, QString)), this, SLOT(HandleCommandFromServer(int, QString)));
-    //connect(networkHandler, SIGNAL(disconnected(int)), this, SLOT(Disconnected(int)));
+    networkHandler = new Network(this);
+    connect(networkHandler, SIGNAL(newCommandAvailable(int, QString)), this, SLOT(HandleCommandFromServer(int, QString)));
+    connect(networkHandler, SIGNAL(disconnected(int)), this, SLOT(Disconnected(int)));
 }
-

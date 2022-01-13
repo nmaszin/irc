@@ -4,6 +4,7 @@
 #include <QTcpSocket>
 #include <QString>
 #include <stdexcept>
+#include <mutex>
 #include <string>
 
 class IrcSocket
@@ -22,6 +23,9 @@ private:
     QString buffer;
     int readStartIndex = 0;
     const QString delimiter = "\r\n";
+
+    std::mutex readMutex;
+    std::mutex writeMutex;
 };
 
 class IrcSocketException : public std::runtime_error {

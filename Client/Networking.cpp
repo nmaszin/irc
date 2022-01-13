@@ -24,6 +24,7 @@ bool Network::connectToServer(const int idx, const QString &host, const qint64 p
             while (true) {
                 QString command = this->sockets[idx]->receiveCommand();
                 if (!command.isEmpty()) {
+                    qInfo() << idx << " recv " << command << "\n";
                     emit newCommandAvailable(idx, command);
                 }
             }
@@ -36,6 +37,7 @@ bool Network::connectToServer(const int idx, const QString &host, const qint64 p
 }
 
 void Network::sendCommandToServer(int idx, const QString &command) {
+    qInfo() << idx << " send " << command << "\n";
     this->sockets[idx]->sendCommand(command);
 }
 

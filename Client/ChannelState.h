@@ -2,6 +2,7 @@
 #define CHANNELSTATE_H
 
 #include <QString>
+#include <QDebug>
 #include "ChatPart.h"
 
 class ChannelState : public QWidget
@@ -19,6 +20,7 @@ public:
     }
 
     void join(const QString& nick) {
+        qInfo() << "Użytkownik " << nick << "jest dodawany do kanału\n";
         if (this->participants.indexOf(nick) == -1) {
             this->participants.push_back(nick);
         }

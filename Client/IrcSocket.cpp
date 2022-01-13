@@ -29,6 +29,7 @@ bool IrcSocket::anyDataToReceive() {
 }
 
 void IrcSocket::sendCommand(QString const &command) {
+    std::lock_guard<std::mutex>(this->writeMutex);
     QString line = command + this->delimiter;
     socket.write(line.toUtf8());
     if (!this->isOk()) {
@@ -37,12 +38,13 @@ void IrcSocket::sendCommand(QString const &command) {
 }
 
 QString IrcSocket::receiveCommand() {
+    std::lock_guard<std::mutex>(this->readMutex);
     QString result;
     while (true) {
         if (this->readStartIndex < this->buffer.length()) {
             auto index = this->buffer.indexOf(this->delimiter, this->readStartIndex);
             if (index != -1) {
-                result += this->buffer.midRef(this->readStartIndex, index - this->readStartIndex - 1);
+                result += this->buffer.midRef(this->readStartIndex, index - this->readStartIndex); // nie powinno być -1?
                 this->readStartIndex = index + this->delimiter.size();
                 return result;
             } else {

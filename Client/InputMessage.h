@@ -105,8 +105,6 @@ public:
             }  catch (const MessageParsingException& e) {
                 this->prefix = std::make_unique<ServerPrefix>(prefixContent);
             }
-        } else {
-            throw MessageParsingException("Each message which clients receive should contain prefix");
         }
 
         if (currentIndex >= parts.size()) {
@@ -117,7 +115,11 @@ public:
         this->arguments = parts.mid(currentIndex);
     }
 
-    const Prefix& getPrefix () {
+    bool hasPrefix() const {
+        return this->prefix != nullptr;
+    }
+
+    const Prefix& getPrefix() {
         return *this->prefix;
     }
 
@@ -134,7 +136,6 @@ protected:
         QStringList list;
 
         QString simplified = message.simplified();
-        //trimmed.replace(QRegularExpression(R"(\s+)"), " ");
         QString delimiter = " :";
         auto index = simplified.indexOf(delimiter);
         if (index != -1) {
@@ -151,7 +152,7 @@ protected:
     }
 
 protected:
-    std::unique_ptr<Prefix> prefix;
+    std::unique_ptr<Prefix> prefix = nullptr;
     QString command;
     QStringList arguments;
 };

@@ -105,124 +105,127 @@ void Client::ChangeUserItem(const int index)
 void Client::HandleCommandFromServer(int index, QString const& text)
 {
     qInfo() << "HandleCommandFromServer()\n";
-    qInfo() << index << " send " << text;
-
     ServerState *server = this->servers[index];
 
     InputMessage msg(text);
     auto& command = msg.getCommand();
     auto& args = msg.getArguments();
-    auto& prefix = msg.getPrefix();
-    if (prefix.getType() == Prefix::Type::Client) {
-        // Broadcasted messages
-        ClientPrefix& p = (ClientPrefix&)prefix;
-        QString nick = p.getNick();
 
-        if (command == "JOIN") {
-            auto& channelName = args[0];
-            ChannelState *channel = server->getChannels()[channelName];
-            channel->join(nick);
-            channel->getChat()->addServerMessage(QString("Użytkownik %1 dołączył do kanału").arg(nick));
-        } else if (command == "PART") {
-            auto& channelName = args[0];
-            QString reason = args.size() > 1 ? args[2] : " ";
-            ChannelState *channel = server->getChannels()[channelName];
-            channel->leave(nick);
-            channel->getChat()->addServerMessage(QString("Użytkownik %1 wyszedł z kanału (%2)").arg(nick, reason));
-        } else if (command == "PRIVMSG") {
-            auto& channelName = args[0];
-            auto& message = args[1];
-            ChannelState *channel = server->getChannels()[channelName];
-            channel->getChat()->addUserMessage(nick, message);
-        } else if (command == "KICK") {
-            auto& channelName = args[0];
-            auto& kickedUserNick = args[1];
-            QString reason = args.size() > 2 ? args[2] : " ";
-            ChannelState *channel = server->getChannels()[channelName];
-            channel->leave(kickedUserNick);
-            channel->getChat()->addServerMessage(QString("Użytkownik %1 wyrzucił użytkownika %2 (%3)").arg(nick, kickedUserNick, reason));
-        } else if (command == "TOPIC") {
-            auto& channelName = args[0];
-            auto& newTopic = args[1];
-            ChannelState *channel = server->getChannels()[channelName];
-            channel->setTopic(newTopic);
-            channel->getChat()->addServerMessage(QString("Użytkownik %1 zmienił temat na: %2").arg(nick, newTopic));
-        } else if (command == "MODE") {
-            // TODO
-        } else if (command == "QUIT") {
-            QString reason = args.size() > 0 ? args[0] : " ";
-            for (ChannelState *channel : server->getChannels().values()) {
-                channel->leave(nick);
-                channel->getChat()->addServerMessage(QString("Użytkownik %1 opuścił serwer (%2)").arg(nick, reason));
-            }
-        } else if (command == "NICK") {
-            QString newNick = args[1];
-            for (ChannelState *channel : server->getChannels().values()) {
-                channel->leave(nick);
-                channel->join(newNick);
-                channel->getChat()->addServerMessage(QString("Użytkownik %1 zmienił nick na serwer %2").arg(nick, newNick));
-            }
-        }
-    } else {
-        if (command == "PING") {
+    if (!msg.hasPrefix()) {
+        if (msg.getCommand() == "PING") {
             auto argument = args[0];
             networkHandler->sendCommandToServer(index, QString("PONG :%1").arg(argument));
-        } else if (command == "321") {
-            // RPL_LISTSTART
-        } else if (command == "322") {
-            // RPL_LIST
-        } else if (command== "323") {
-            // RPL_LISTEND
-        } else if (command == "324") {
-            // RPL_CHANNELMODEIS
-        } else if (command == "331") {
-            // RPL_NOTOPIC
-            auto& channelName = args[1];
-            ChannelState *channel = server->getChannels()[channelName];
-            channel->getChat()->addServerMessage("Kanał nie posiada żadnego tematu");
-        } else if (command == "332") {
-            // RPL_TOPIC
-            auto& channelName = args[1];
-            auto& topic = args[2];
-            ChannelState *channel = server->getChannels()[channelName];
-            channel->setTopic(topic);
-            channel->getChat()->addServerMessage(QString("Temat: %1").arg(topic));
-        } else if (command == "353") {
-            // RPL_NAMREPLY
-            auto& channelName = args[2];
-            auto usersList = args[3].split(" ");
-            ChannelState *channel = server->getChannels()[channelName];
-            for (const auto& userNick : usersList) {
-                channel->join(userNick);
+        }
+    } else {
+        auto& prefix = msg.getPrefix();
+        if (prefix.getType() == Prefix::Type::Client) {
+            // Broadcasted messages
+            ClientPrefix& p = (ClientPrefix&)prefix;
+            QString nick = p.getNick();
+
+            if (command == "JOIN") {
+                auto& channelName = args[0];
+                ChannelState *channel = server->getChannels()[channelName];
+                channel->join(nick);
+                channel->getChat()->addServerMessage(QString("Użytkownik %1 dołączył do kanału").arg(nick));
+            } else if (command == "PART") {
+                auto& channelName = args[0];
+                QString reason = args.size() > 1 ? args[2] : " ";
+                ChannelState *channel = server->getChannels()[channelName];
+                channel->leave(nick);
+                channel->getChat()->addServerMessage(QString("Użytkownik %1 wyszedł z kanału (%2)").arg(nick, reason));
+            } else if (command == "PRIVMSG") {
+                auto& channelName = args[0];
+                auto& message = args[1];
+                ChannelState *channel = server->getChannels()[channelName];
+                channel->getChat()->addUserMessage(nick, message);
+            } else if (command == "KICK") {
+                auto& channelName = args[0];
+                auto& kickedUserNick = args[1];
+                QString reason = args.size() > 2 ? args[2] : " ";
+                ChannelState *channel = server->getChannels()[channelName];
+                channel->leave(kickedUserNick);
+                channel->getChat()->addServerMessage(QString("Użytkownik %1 wyrzucił użytkownika %2 (%3)").arg(nick, kickedUserNick, reason));
+            } else if (command == "TOPIC") {
+                auto& channelName = args[0];
+                auto& newTopic = args[1];
+                ChannelState *channel = server->getChannels()[channelName];
+                channel->setTopic(newTopic);
+                channel->getChat()->addServerMessage(QString("Użytkownik %1 zmienił temat na: %2").arg(nick, newTopic));
+            } else if (command == "MODE") {
+                // TODO
+            } else if (command == "QUIT") {
+                QString reason = args.size() > 0 ? args[0] : " ";
+                for (ChannelState *channel : server->getChannels().values()) {
+                    channel->leave(nick);
+                    channel->getChat()->addServerMessage(QString("Użytkownik %1 opuścił serwer (%2)").arg(nick, reason));
+                }
+            } else if (command == "NICK") {
+                QString newNick = args[1];
+                for (ChannelState *channel : server->getChannels().values()) {
+                    channel->leave(nick);
+                    channel->join(newNick);
+                    channel->getChat()->addServerMessage(QString("Użytkownik %1 zmienił nick na serwer %2").arg(nick, newNick));
+                }
             }
-        } else if (command == "366") {
-            // RPL_ENDOFNAMES
-            // Do nothing
-        } else if (command == "482") {
-            // ERR_CHANOPRIVSNEEDED
-            auto& channelName = args[1];
-            ChannelState *channel = server->getChannels()[channelName];
-            channel->getChat()->addServerMessage(QString("Nie jesteś operatorem tego kanału"));
-        } else if (command == "401") {
-            // ERR_NOSUCHNICK
-            // TODO: send to channel/server chatpart, not only server
-            auto& recipient = args[1];
-            server->getChat()->addServerMessage(QString("Użytkownik %1 nie istnieje").arg(recipient));
-        } else if (command == "403") {
-            // ERR_NOSUCHCHANNEL
-            auto& channelName = args[1];
-            server->getChat()->addServerMessage(QString("Kanał %1 nie istnieje").arg(channelName));
-        } else if (command == "404") {
-            // ERR_CANNOTSENDTOCHAN
-            auto& channelName = args[1];
-            server->getChat()->addServerMessage(QString("Kanał %1 nie istnieje").arg(channelName));
-        } else if (command == "433") {
-            // ERR_NICKNAMEINUSE
-            qInfo() << "Użytkownik o podanym nicku już istnieje";
-        } else if (command == "474") {
-            // ERR_BANEDFROMCHAN
-            auto& channelName = args[1];
-            server->getChat()->addServerMessage(QString("Nie możesz dołączyć do kanału %1, ponieważ zostałeś zbanowany").arg(channelName));
+        } else {
+            if (command == "321") {
+                // RPL_LISTSTART
+            } else if (command == "322") {
+                // RPL_LIST
+            } else if (command== "323") {
+                // RPL_LISTEND
+            } else if (command == "324") {
+                // RPL_CHANNELMODEIS
+            } else if (command == "331") {
+                // RPL_NOTOPIC
+                auto& channelName = args[1];
+                ChannelState *channel = server->getChannels()[channelName];
+                channel->getChat()->addServerMessage("Kanał nie posiada żadnego tematu");
+            } else if (command == "332") {
+                // RPL_TOPIC
+                auto& channelName = args[1];
+                auto& topic = args[2];
+                ChannelState *channel = server->getChannels()[channelName];
+                channel->setTopic(topic);
+                channel->getChat()->addServerMessage(QString("Temat: %1").arg(topic));
+            } else if (command == "353") {
+                // RPL_NAMREPLY
+                auto& channelName = args[2];
+                auto usersList = args[3].split(" ");
+                ChannelState *channel = server->getChannels()[channelName];
+                for (const auto& userNick : usersList) {
+                    channel->join(userNick);
+                }
+            } else if (command == "366") {
+                // RPL_ENDOFNAMES
+                // Do nothing
+            } else if (command == "482") {
+                // ERR_CHANOPRIVSNEEDED
+                auto& channelName = args[1];
+                ChannelState *channel = server->getChannels()[channelName];
+                channel->getChat()->addServerMessage(QString("Nie jesteś operatorem tego kanału"));
+            } else if (command == "401") {
+                // ERR_NOSUCHNICK
+                // TODO: send to channel/server chatpart, not only server
+                auto& recipient = args[1];
+                server->getChat()->addServerMessage(QString("Użytkownik %1 nie istnieje").arg(recipient));
+            } else if (command == "403") {
+                // ERR_NOSUCHCHANNEL
+                auto& channelName = args[1];
+                server->getChat()->addServerMessage(QString("Kanał %1 nie istnieje").arg(channelName));
+            } else if (command == "404") {
+                // ERR_CANNOTSENDTOCHAN
+                auto& channelName = args[1];
+                server->getChat()->addServerMessage(QString("Kanał %1 nie istnieje").arg(channelName));
+            } else if (command == "433") {
+                // ERR_NICKNAMEINUSE
+                qInfo() << "Użytkownik o podanym nicku już istnieje";
+            } else if (command == "474") {
+                // ERR_BANEDFROMCHAN
+                auto& channelName = args[1];
+                server->getChat()->addServerMessage(QString("Nie możesz dołączyć do kanału %1, ponieważ zostałeś zbanowany").arg(channelName));
+            }
         }
     }
 }
@@ -296,7 +299,6 @@ void Client::addServer(const QString& hostname, quint16 port, const QString& nic
         networkHandler->sendCommandToServer(*this->currentServerIndex, QString("NICK %1").arg(nick));
         // TODO: odebrać odpowiedź i sprawdzić, czy nick nie jest zajęty
         networkHandler->sendCommandToServer(*this->currentServerIndex, QString("USER %1 %2 %3 :%4").arg(nick, nick, nick, nick));
-        networkHandler->sendCommandToServer(*this->currentServerIndex, QString("JOIN #tescik"));
 
         ChatPart *widget = server->getChat();
         stackedWidget->addWidget(widget);

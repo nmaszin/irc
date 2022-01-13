@@ -41,6 +41,7 @@ class Client : public QMainWindow, public Ui_Client
     private:
         Ui::Client *ui;
         Network *networkHandler;
+
         QList<ServerState*> servers;
         std::optional<int> currentServerIndex = 0;
 

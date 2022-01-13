@@ -1,4 +1,5 @@
 #include <QTcpSocket>
+#include <thread>
 #include "IrcSocket.h"
 
 IrcSocket::IrcSocket(QString const &name, const qint64 port)
@@ -41,15 +42,16 @@ QString IrcSocket::receiveCommand() {
         if (this->readStartIndex < this->buffer.length()) {
             auto index = this->buffer.indexOf(this->delimiter, this->readStartIndex);
             if (index != -1) {
-                result += this->buffer.midRef(this->readStartIndex, index);
+                result += this->buffer.midRef(this->readStartIndex, index - this->readStartIndex - 1);
                 this->readStartIndex = index + this->delimiter.size();
                 return result;
+            } else {
+                result += this->buffer.midRef(this->readStartIndex);
             }
-        } else {
-            result += this->buffer.midRef(this->readStartIndex);
         }
 
         this->buffer = this->socket.readAll();
+        this->readStartIndex = 0;
         if (!this->isOk()) {
             throw IrcSocketException("Could not read from server");
         }

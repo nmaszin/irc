@@ -5,6 +5,7 @@
 
 void Client::Connect()
 {
+    qInfo() << "Connect()\n";
     ConnectWindow *dialog = new ConnectWindow(this);
     if(dialog->exec() == QDialog::Accepted)
     {
@@ -17,6 +18,7 @@ void Client::Connect()
 
 void Client::Disconnected(int index)
 {
+    qInfo() << "Disconnected()\n";
     ServerState *server = this->servers[index];
     qInfo() << "Disconnected " << server->getIdentifier() << "\n";
     removeServer(index);
@@ -24,6 +26,7 @@ void Client::Disconnected(int index)
 
 void Client::DisconnectCurrentServer()
 {
+    qInfo() << "DisconnectCurrentServer()\n";
     if (this->currentServerIndex) {
         DisconnectServer(*this->currentServerIndex);
     } else {
@@ -33,6 +36,7 @@ void Client::DisconnectCurrentServer()
 
 void Client::DisconnectServer(int index)
 {
+    qInfo() << "Disconnected()\n";
     Disconnected(index);
     this->networkHandler->disconnectFromServer(index);
 }
@@ -84,6 +88,7 @@ void Client::Help()
 
 void Client::ChangeConnectionItem(const int index)
 {
+    qInfo() << "ChangeConnectionItem()\n";
     stackedWidget->setCurrentIndex(index);
     listWidgetConnection->setCurrentRow(index);
     //listWidgetUser->clear();
@@ -91,6 +96,7 @@ void Client::ChangeConnectionItem(const int index)
 
 void Client::ChangeUserItem(const int index)
 {
+    qInfo() << "ChangeUserItem()\n";
     /*QListWidgetItem *item = listWidgetUser->item(index);
     QString name = item->text();
     addChatPart(name, USER_TYPE);*/
@@ -98,6 +104,7 @@ void Client::ChangeUserItem(const int index)
 
 void Client::HandleCommandFromServer(int index, QString const& text)
 {
+    qInfo() << "HandleCommandFromServer()\n";
     qInfo() << index << " send " << text;
 
     ServerState *server = this->servers[index];
@@ -157,8 +164,10 @@ void Client::HandleCommandFromServer(int index, QString const& text)
             }
         }
     } else {
-        // Server responses
-        if (command == "321") {
+        if (command == "PING") {
+            auto argument = args[0];
+            networkHandler->sendCommandToServer(index, QString("PONG :%1").arg(argument));
+        } else if (command == "321") {
             // RPL_LISTSTART
         } else if (command == "322") {
             // RPL_LIST
@@ -220,6 +229,7 @@ void Client::HandleCommandFromServer(int index, QString const& text)
 
 void Client::HandleUserInput()
 {
+    qInfo() << "HandleUserInput()\n";
     if (!this->currentServerIndex) {
         // Skoro żaden serwer nie jest wybrany, to nie powinno być możliwe wysłanie jakiejkolwiek komendy
         qInfo("Ups!");
@@ -274,7 +284,10 @@ void Client::HandleUserInput()
 }
 
 void Client::addServer(const QString& hostname, quint16 port, const QString& nick) {
+    qInfo() << "addServer()\n";
     int newIndex = this->servers.size();
+    qInfo() << "Nowy indeks: " << newIndex << "\n";
+
     if (networkHandler->connectToServer(newIndex, hostname, port)) {
         ServerState *server = new ServerState(hostname, port, this);
         this->servers.push_back(server);
@@ -300,7 +313,7 @@ void Client::addServer(const QString& hostname, quint16 port, const QString& nic
 }
 
 void Client::removeServer(int index) {
-
+    qInfo() << "removeServer()\n";
 
     qInfo() << "A\n";
     ServerState *server = this->servers[index];
@@ -341,11 +354,13 @@ void Client::removeServer(int index) {
 }
 
 ServerState* Client::getCurrentServer() {
+    qInfo() << "getCurrentServer()\n";
     return this->servers[*this->currentServerIndex];
 }
 
 void Client::setView(bool anyServerOpened)
 {
+    qInfo() << "setView()\n";
     if (anyServerOpened) {
         lineEditMessage->setReadOnly(false);
         pushButtonSend->setEnabled(true);
@@ -363,6 +378,7 @@ Client::Client(QWidget *parent) :
     QMainWindow(parent),
     networkHandler(new Network(this))
 {
+    qInfo() << "Client()\n";
     // Interface
     setupUi(this);
     setView(false);
@@ -381,7 +397,6 @@ Client::Client(QWidget *parent) :
     connect(pushButtonSend, SIGNAL(clicked()), this, SLOT(HandleUserInput()));
 
     // Network
-    networkHandler = new Network(this);
     connect(networkHandler, SIGNAL(newCommandAvailable(int, QString)), this, SLOT(HandleCommandFromServer(int, QString)));
     connect(networkHandler, SIGNAL(disconnected(int)), this, SLOT(Disconnected(int)));
 }

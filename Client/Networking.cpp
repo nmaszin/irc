@@ -5,7 +5,7 @@ Network::Network(QObject *parent) : QObject(parent)
 {
 }
 
-bool Network::connectToServer(int idx, const QString &host, const qint64 port) {
+bool Network::connectToServer(const int idx, const QString &host, const qint64 port) {
     if (this->sockets.size() != this->threads.size() || this->sockets.size() != idx) {
         qWarning() << "NetworkManager is not consistent with servers state!\n";
         return false;
@@ -19,7 +19,7 @@ bool Network::connectToServer(int idx, const QString &host, const qint64 port) {
     }
 
     this->sockets.push_back(std::move(socket));
-    this->threads.push_back(std::thread([&]() {
+    this->threads.push_back(std::thread([this](int idx) {
         try {
             while (true) {
                 QString command = this->sockets[idx]->receiveCommand();
@@ -30,7 +30,7 @@ bool Network::connectToServer(int idx, const QString &host, const qint64 port) {
         } catch (const IrcSocketException& e) {
             emit disconnected(idx);
         }
-    }));
+    }, idx));
 
     return true;
 }

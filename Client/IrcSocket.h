@@ -21,7 +21,6 @@ private:
     QTcpSocket socket;
     QString buffer;
     int readStartIndex = 0;
-    int readEndIndex = 0;
     const QString delimiter = "\r\n";
 };
 

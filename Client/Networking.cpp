@@ -5,51 +5,27 @@ Network::Network(QObject *parent) : QObject(parent)
 {
 }
 
-bool Network::connectToServer(const QString &identifier, const QString &host, const qint64 port) {
-    try {
-        auto id = identifier.toStdString();
-        auto socket = std::make_unique<IrcSocket>(host, port);
-        this->threads[id] = std::thread([&](const QString& identifier, std::unique_ptr<IrcSocket>&& socket, Common& common) {
-            try {
-                while (true) {
-                    {
-                        std::lock_guard<std::mutex>(common.mutex);
-                        if (!common.dataToSend.empty()) {
-                            auto command = common.dataToSend.front();
-                            qInfo() << "Send " << command << "\n";
-                            socket->sendCommand(command);
-                            common.dataToSend.pop();
-                        }
-                    }
-
-                    if (socket->anyDataToReceive()) {
-                        QString command = socket->receiveCommand();
-                        if (!command.isEmpty()) {
-                            emit newCommandAvailable(identifier, command);
-                        }
-                    }
-                }
-            } catch (const IrcSocketException& e) {
-                this->disconnectFromServer(identifier);
-            }
-        }, identifier, std::move(socket), std::ref(common[id]));
-        return true;
-
-    }  catch (const IrcSocketException& e) {
-        emit couldNotConnect(identifier);
-    }
-
-    return false;
+bool Network::connectToServer(int id, const QString &host, const qint64 port) {
+    IrcSocket *socket = new IrcSocket(id, this);
+    connect(socket, SIGNAL(disconnected(int)), this, SLOT(handleDisconnected(int)));
+    connect(socket, SIGNAL(receivedCommand(int, QString)), this, SLOT(handleReceivedCommand(int, QString)));
+    this->sockets[id] = socket;
+    return socket->connect(host, port);
 }
 
-void Network::sendCommandToServer(const QString &identifier, const QString &command) {
-    auto& c = common[identifier.toStdString()];
-    std::lock_guard<std::mutex>(c.mutex);
-    c.dataToSend.push(command);
+void Network::sendCommandToServer(int id, const QString &command) {
+    qInfo() << id << " send " << command << "\n";
+    this->sockets[id]->sendCommand(command);
 }
 
-void Network::disconnectFromServer(QString const &identifier) {
-    auto id = identifier.toStdString();
-    common.erase(common.find(id));
-    emit disconnected(identifier);
+void Network::disconnectFromServer(int id) {
+    this->sockets.remove(id);
+}
+
+void Network::handleDisconnected(int id) {
+    emit disconnected(id);
+}
+
+void Network::handleReceivedCommand(int id, const QString& command) {
+    emit newCommandAvailable(id, command);
 }

@@ -19,9 +19,9 @@ QString ConnectWindow::getServerName()
     return input;
 }
 
-qint64 ConnectWindow::getServerPort()
+QString ConnectWindow::getServerPort()
 {
     QString input;
     input = lineEditServerPort->text();
-    return input.toInt();
+    return input;
 }

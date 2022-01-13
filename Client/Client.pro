@@ -9,31 +9,28 @@ TEMPLATE = app
 CONFIG += c++17
 
 SOURCES +=  main.cpp\
+            Client.cpp \
             ChannelState.cpp \
             ChatPart.cpp \
-            Client.cpp \
             ConnectDialog.cpp \
-            InputParse.cpp \
+            InputMessage.cpp \
             IrcSocket.cpp \
-            Networking.cpp \
-            OutputIrcMessage.cpp \
-            OutputParse.cpp \
-            ServerState.cpp
+            ServerState.cpp \
+            Networking.cpp
 
 HEADERS  += Client.h \
             ChannelState.h \
             ChatPart.h \
             ConnectDialog.h \
-            InputParse.h \
+            InputMessage.h \
             IrcSocket.h \
-            Networking.h \
-            OutputIrcMessage.h \
-            OutputParse.h \
             ServerState.h \
-            utils.h
+            Networking.h
 
 FORMS    += Client.ui \
-    ConnectDialog.ui
+            ConnectDialog.ui
 
 RESOURCES += \
               app.qrc
+
+QMAKE_CXXFLAGS += "-fno-sized-deallocation"

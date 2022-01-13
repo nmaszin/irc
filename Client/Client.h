@@ -10,11 +10,10 @@
 #include <optional>
 
 #include "ui_Client.h"
-#include "Networking.h"
-#include "OutputParse.h"
-#include "InputParse.h"
+#include "ServerState.h"
 #include "ChatPart.h"
 #include "ConnectDialog.h"
+#include "Networking.h"
 
 class Client : public QMainWindow, public Ui_Client
 {
@@ -22,45 +21,71 @@ class Client : public QMainWindow, public Ui_Client
 
     private slots:
         void Connect();
+        void Disconnected(int);
+        void DisconnectServer(int);
         void DisconnectCurrentServer();
-        void CouldNotConnect(QString const& identifier);
-        void Disconnected(QString const& identifier);
+
         void Exit();
         void ShowUser();
         void ShowConnection();
         void About();
         void Help();
+
         void ChangeConnectionItem(const int index);
-        void ChangeUserItem(const int index);
-        void HandleCommandFromServer(QString const& identifier, QString const& command);
+
+        void HandleCommandFromServer(int index, QString const& command);
         void HandleUserInput();
 
     private:
         Ui::Client *ui;
-
         Network *networkHandler;
-        OutputParse OutputParseHandler;
-        InputParse parserInputHandler;
-        QList <ChatPart*> listChatPart;
 
-        QStringList servers;
-        std::optional<QString> currentServerIdentifier;
-        std::optional<QString> currentChannel;
+        QMap<int, ServerState*> servers;
+        std::optional<int> currentChatIndex;
+        int connectionId = 0;
 
-        void addServer(const QString& server);
-        void removeServer(const QString& server);
-        //void addChannelToServer(const QString& server, const QString& channel);
-        //void removeChannelFromServer(const QString& server, const QString& channel);
-
+        void addServer(const QString& hostname, quint16 port, const QString& nick);
+        void removeServer(int index);
+        //ServerState *getCurrentServer();
+        int getIndexOfChat(ChatPart *chat);
+        ChatPart* getChatByIndex(int index);
         void setView(bool anyServerOpened);
-        qint64 getChatPartIdByName(QString const &name);
-        int addChatPart(QString const &identifier, ChatPart::Type type);
-        void removeChatPart(int index);
+        void updateLeftSidebar();
 
+        void addNewChatToSidebar(ChatPart *chat);
+        void addNewChatToSidebar(ChatPart *chat, int index);
+        void removeChatFromSidebar(int index);
+        void removeChatFromSidebar(ChatPart *chat);
 
+        void updateRightSidebar(int index) {
+            listWidgetUser->clear();
+            ChatPart *chat = getChatByIndex(index);
+            if (!chat) {
+                return;
+            }
 
+            if (chat->hasChannelName()) {
+                auto channelName = *chat->getChannelName();
 
-        // void updateUserList(QString const &name, QStringList const &users);
+                int id = chat->getServerId();
+                ServerState *server = this->servers[id];
+                ChannelState *channel = server->getChannel(channelName);
+                for (const auto& nick : channel->getParticipants()) {
+                    listWidgetUser->addItem(nick);
+                }
+            }
+        }
+
+        void addUserToRightSidebar(const QString& nick) {
+            listWidgetUser->addItem(nick);
+        }
+
+        void removeUserFromRightSidebar(const QString& nick) {
+            for (auto ptr : listWidgetUser->findItems(nick, Qt::MatchExactly)) {
+                listWidgetUser->takeItem(listWidgetUser->row(ptr));
+            }
+        }
+
 
     public:
         Client(QWidget *parent = 0);

@@ -16,7 +16,7 @@ class ConnectWindow : public QDialog, public Ui_ConnectDialog
 
         QString getNickName();
         QString getServerName();
-        qint64 getServerPort();
+        QString getServerPort();
 };
 
 #endif

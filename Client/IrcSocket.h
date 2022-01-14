@@ -1,38 +1,35 @@
 #ifndef IRCSOCKET_H
 #define IRCSOCKET_H
 
+#include <QObject>
 #include <QTcpSocket>
 #include <QString>
 #include <stdexcept>
 #include <mutex>
 #include <string>
 
-class IrcSocket
+class IrcSocket : public QObject
 {
+    Q_OBJECT
 public:
-    IrcSocket(QString const &name, const qint64 port);
+    IrcSocket(int id, QObject *parent = nullptr);
+    bool connect(QString const &name, const qint64 port);
     void close();
+    void sendCommand(const QString& command);
 
-    bool isOk() const;
-    bool anyDataToReceive();
-    void sendCommand(QString const &command);
-    QString receiveCommand();
+signals:
+    void disconnected(int id);
+    void receivedCommand(int id, const QString&);
+
+private slots:
+    void handleDisconnected();
+    void handleReadyRead();
 
 private:
-    QTcpSocket socket;
+    int id;
+    QTcpSocket *socket;
     QString buffer;
-    int readStartIndex = 0;
     const QString delimiter = "\r\n";
-
-    std::mutex readMutex;
-    std::mutex writeMutex;
-};
-
-class IrcSocketException : public std::runtime_error {
-public:
-    IrcSocketException(const std::string& message) :
-        std::runtime_error(message)
-    {}
 };
 
 #endif // IRCSOCKET_H

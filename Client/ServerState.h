@@ -12,40 +12,49 @@ class ServerState : public QWidget
 {
     Q_OBJECT
 public:
-    ServerState(const QString& hostname, quint16 port, QWidget *parent = nullptr) :
+    ServerState(int id, const QString& hostname, quint16 port, QWidget *parent = nullptr) :
         QWidget(parent),
+        id(id),
         hostname(hostname),
         port(port),
-        serverChat(new ChatPart(hostname, ChatPart::Type::SERVER_TYPE, this))
+        serverChat(new ChatPart(hostname, ChatPart::Type::SERVER_TYPE, id, std::nullopt, this))
     {
+    }
+
+    int getId() {
+        return this->id;
+    }
+
+    void setNick(const QString& nick) {
+        this->nick = nick;
+    }
+
+    const QString& getNick() const {
+        return this->nick;
     }
 
     bool hasAnyChannel() {
         return this->currentChannel != nullptr;
     }
 
-    ChannelState* getCurrentChannel() {
-        return this->currentChannel;
+    bool hasChannel(const QString& name) {
+        return this->channels.contains(name);
     }
 
-    void joinChannel(const QString& name) {
-        if (!this->isParticipantOfChannel(name)) {
-            this->channels[name] = new ChannelState(name, this);
-        }
+    void addChannel(const QString& name) {
+        this->channels[name] = new ChannelState(name, id, this);
     }
 
-    void leaveChannel(const QString& name) {
+    void removeChannel(const QString& name) {
         this->channels.remove(name);
     }
 
-    bool isParticipantOfChannel(const QString& name) {
-        for (ChannelState *channel : this->channels) {
-            if (channel->getName() == name) {
-                return true;
-            }
-        }
+    ChannelState *getChannel(const QString& name) {
+        return this->channels[name];
+    }
 
-        return false;
+    QMap<QString, ChannelState*>& getChannels() {
+        return this->channels;
     }
 
     QString getIdentifier() {
@@ -54,10 +63,6 @@ public:
 
     ChatPart* getChat() {
         return this->serverChat;
-    }
-
-    QMap<QString, ChannelState*>& getChannels() {
-        return this->channels;
     }
 
     const QString& getHostname() {
@@ -69,8 +74,11 @@ public:
     }
 
 protected:
+    int id;
     QString hostname;
     quint16 port;
+
+    QString nick;
 
     ChatPart *serverChat;
     QMap<QString, ChannelState*> channels;

@@ -5,43 +5,27 @@ Network::Network(QObject *parent) : QObject(parent)
 {
 }
 
-bool Network::connectToServer(const int idx, const QString &host, const qint64 port) {
-    if (this->sockets.size() != this->threads.size() || this->sockets.size() != idx) {
-        qWarning() << "NetworkManager is not consistent with servers state!\n";
-        return false;
-    }
-
-    std::unique_ptr<IrcSocket> socket;
-    try {
-        socket = std::make_unique<IrcSocket>(host, port);
-    }  catch (const IrcSocketException& e) {
-        return false;
-    }
-
-    this->sockets.push_back(std::move(socket));
-    this->threads.push_back(std::thread([this](int idx) {
-        try {
-            while (true) {
-                QString command = this->sockets[idx]->receiveCommand();
-                if (!command.isEmpty()) {
-                    qInfo() << idx << " recv " << command << "\n";
-                    emit newCommandAvailable(idx, command);
-                }
-            }
-        } catch (const IrcSocketException& e) {
-            emit disconnected(idx);
-        }
-    }, idx));
-
-    return true;
+bool Network::connectToServer(int id, const QString &host, const qint64 port) {
+    IrcSocket *socket = new IrcSocket(id, this);
+    connect(socket, SIGNAL(disconnected(int)), this, SLOT(handleDisconnected(int)));
+    connect(socket, SIGNAL(receivedCommand(int, QString)), this, SLOT(handleReceivedCommand(int, QString)));
+    this->sockets[id] = socket;
+    return socket->connect(host, port);
 }
 
-void Network::sendCommandToServer(int idx, const QString &command) {
-    qInfo() << idx << " send " << command << "\n";
-    this->sockets[idx]->sendCommand(command);
+void Network::sendCommandToServer(int id, const QString &command) {
+    qInfo() << id << " send " << command << "\n";
+    this->sockets[id]->sendCommand(command);
 }
 
-void Network::disconnectFromServer(int idx) {
-    this->sockets.erase(this->sockets.begin() + idx);
-    this->threads.erase(this->threads.begin() + idx);
+void Network::disconnectFromServer(int id) {
+    this->sockets.remove(id);
+}
+
+void Network::handleDisconnected(int id) {
+    emit disconnected(id);
+}
+
+void Network::handleReceivedCommand(int id, const QString& command) {
+    emit newCommandAvailable(id, command);
 }

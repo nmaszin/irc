@@ -1,12 +1,15 @@
 #ifndef CHATPART_H
 #define CHATPART_H
 
+#include <optional>
 #include <QWidget>
 #include <QTime>
-#include <QTableWidget>
+#include <QTextEdit>
 #include <QHeaderView>
 
-class ChatPart : public QTableWidget
+class ServerState;
+class ChannelState;
+class ChatPart : public QTextEdit
 {
     public:
         enum class Type {
@@ -15,7 +18,7 @@ class ChatPart : public QTableWidget
             USER_TYPE = 102
         };
 
-        ChatPart(QString const &name, Type type, QWidget *parent = nullptr);
+        ChatPart(QString const &name, Type type, int serverId, std::optional<QString> channelName = std::nullopt, QWidget *parent = nullptr);
 
         bool isUser() {
             return chatType == Type::USER_TYPE;
@@ -27,11 +30,23 @@ class ChatPart : public QTableWidget
             return chatType == Type::SERVER_TYPE;
         }
 
-        QString getName() {
+        QString& getName() {
             return chatName;
         }
         Type getType() {
             return chatType;
+        }
+
+        int getServerId() const {
+            return this->serverId;
+        }
+
+        bool hasChannelName() {
+            return this->channelName.has_value();
+        }
+
+        std::optional<QString> getChannelName() const {
+            return *this->channelName;
         }
 
         void addUserMessage(QString const& nick, QString const &message);
@@ -41,6 +56,10 @@ class ChatPart : public QTableWidget
     private:
         QString chatName;
         Type chatType;
+
+        int serverId;
+        std::optional<QString> channelName;
 };
 
 #endif
+

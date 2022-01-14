@@ -32,3 +32,5 @@ FORMS    += Client.ui \
 
 RESOURCES += \
               app.qrc
+
+QMAKE_CXXFLAGS += "-fno-sized-deallocation"

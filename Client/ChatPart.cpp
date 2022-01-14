@@ -1,51 +1,33 @@
+#include <QDebug>
+#include <QTextCursor>
 #include "ChatPart.h"
 
-ChatPart::ChatPart(const QString &name, Type type, QWidget *parent) :
-    QTableWidget(parent),
-    chatName(name),
-    chatType(type)
+ChatPart::ChatPart(QString const &name, Type type, int serverId, std::optional<QString> channelName, QWidget *parent) :
+    QTextEdit(parent),
+    chatName((type == Type::SERVER_TYPE ? "" : "    ") + name),
+    chatType(type),
+    serverId(serverId),
+    channelName(channelName)
 {
-    QHeaderView *verticalView = new QHeaderView(Qt::Vertical);
-    verticalView->setSectionResizeMode(QHeaderView::ResizeToContents);
-    verticalView = verticalHeader();
-
-    QHeaderView *horizontalView = new QHeaderView(Qt::Horizontal);
-    horizontalView->setStretchLastSection(true);
-    horizontalView = horizontalHeader();
-
-    verticalHeader()->setContentsMargins(0, 0, 0, 0);
-    verticalHeader()->setStyleSheet("QHeaderView:section { padding: 0px }");
-    verticalHeader()->setStyleSheet("QHeaderView:section { margin: 0px }");
-
-    horizontalHeader()->hide();
-    verticalHeader()->hide();
-
-    setEditTriggers(QAbstractItemView::NoEditTriggers);
-    setColumnCount(2);
-    setWordWrap(true);
+    this->setReadOnly(true);
 }
 
 void ChatPart::addUserMessage(const QString &nick, const QString &message)
 {
+    qInfo() << QString("[%1] <%2> %3").arg(this->chatName, nick, message);
     QTime time = QTime::currentTime();
     QString output = time.toString();
-    QString text = QString("<%1> %2").arg(nick, message);
-
-    int rows = rowCount();
-    setItem(rows, 1, new QTableWidgetItem(text));
-    setItem(rows, 0, new QTableWidgetItem(output));
-    resizeColumnToContents(0);
+    QString text = QString("[%1] <%2> %3").arg(output, nick, message);
+    setText(this->toPlainText() + "\n" + text);
+    moveCursor(QTextCursor::End);
 }
 
 void ChatPart::addServerMessage(const QString &message)
 {
+    qInfo() << QString("[%1] * %2").arg(this->chatName, message);
     QTime time = QTime::currentTime();
     QString output = time.toString();
-    QString text = QString("* %1").arg(message);
-
-    int rows = rowCount();
-    setItem(rows, 1, new QTableWidgetItem(text));
-    setItem(rows, 0, new QTableWidgetItem(output));
-    resizeColumnToContents(0);
+    QString text = QString("[%1] * %2").arg(output, message);
+    setText(this->toPlainText() + "\n" + text);
+    moveCursor(QTextCursor::End);
 }
-
